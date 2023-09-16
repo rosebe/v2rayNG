@@ -26,7 +26,8 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v4
       with:
-        go-version: '1.19.11'
+        go-version: '1.21'
+        check-latest: true
 
     - name: Install gomobile
       run: |
@@ -61,4 +62,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/
+        path: |
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/*.apk
