@@ -57,12 +57,21 @@ jobs:
         chmod 777 *
         sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         ./gradlew assembleDebug
+    - name: Set variables
+      shell: bash
+      run: |
+          echo "NG_STRING=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName "' | awk '{print $2}')" >> $GITHUB_ENV
+          echo "NGVERSION=${NG_STRING//\"/}" >> $GITHUB_ENV
+          
+          echo "ASSET_NAME=v2rayNG_v${NGVERSION}_arm64-v8a" >> $GITHUB_ENV
+          echo "TAG_NAME=v$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName "' | awk '{print $2}')" >> $GITHUB_ENV
+          echo "RELEASE_NAME=x2ray-ng v$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName "' | awk '{print $2}') >> $GITHUB_ENV
 
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
         name: apk
         path: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_1.8.6_arm64-v8a.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NGVERSION }}_arm64-v8a.apk
           
           
