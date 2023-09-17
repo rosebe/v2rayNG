@@ -16,6 +16,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Set variables
+      shell: bash
+      run: |
+          echo "NG_STRING=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName' | grep -v 'versionNameSuffix' |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "NG_STRING=${{ env.NG_STRING }}"
+          
+          echo 'NGVERSION=${NG_STRING//\"/}' >> $GITHUB_ENV
+          echo "NGVERSION=${{ env.NGVERSION }}"
+          
+          echo "ASSET_NAME=v2rayNG_v${NGVERSION}_arm64-v8a" >> $GITHUB_ENV
+          echo "TAG_NAME=v${NGVERSION} >> $GITHUB_ENV
+          echo "RELEASE_NAME=x2ray-ng-v${NGVERSION} >> $GITHUB_ENV
       
     - name: Setup Java
       uses: actions/setup-java@v3
@@ -57,19 +70,7 @@ jobs:
         chmod 777 *
         sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         ./gradlew assembleDebug
-    - name: Set variables
-      shell: bash
-      run: |
-          echo "NG_STRING=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName' | grep -v 'versionNameSuffix' |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
-          echo "NG_STRING=${{ env.NG_STRING }}"
-          
-          echo 'NGVERSION=${NG_STRING//\"/}' >> $GITHUB_ENV
-          echo "NGVERSION=${{ env.NGVERSION }}"
-          
-          echo "ASSET_NAME=v2rayNG_v${NGVERSION}_arm64-v8a" >> $GITHUB_ENV
-          echo "TAG_NAME=v${NGVERSION} >> $GITHUB_ENV
-          echo "RELEASE_NAME=x2ray-ng-v${NGVERSION} >> $GITHUB_ENV
-
+    
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
