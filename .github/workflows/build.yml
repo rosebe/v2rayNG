@@ -54,7 +54,7 @@ jobs:
     - name: Set variables
       shell: bash
       run: |
-          echo "NGstring=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName' | grep -v 'versionNameSuffix' |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "NGstring=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
           echo "NGstring=${{ env.NGstring }}"
           echo "NGVERSION=sed -i 's/"//g') <<< ${{ env.NGstring }}" >> $GITHUB_ENV
           echo "NGVERSION=${{ env.NGVERSION }}"
