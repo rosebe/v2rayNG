@@ -61,7 +61,10 @@ jobs:
       shell: bash
       run: |
           echo "NG_STRING=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep  'versionName' | grep -v 'versionNameSuffix' |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "NG_STRING=${{ env.NG_STRING }}"
+          
           echo 'NGVERSION=${NG_STRING//\"/}' >> $GITHUB_ENV
+          echo "NGVERSION=${{ env.NGVERSION }}"
           
           echo "ASSET_NAME=v2rayNG_v${NGVERSION}_arm64-v8a" >> $GITHUB_ENV
           echo "TAG_NAME=v${NGVERSION} >> $GITHUB_ENV
