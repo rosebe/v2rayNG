@@ -45,7 +45,7 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
-        go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
+        go get github.com/xtls/xray-core@$92bec537f1d7 || true
         gomobile init
         go mod tidy -v
         gomobile bind -v -androidapi 19 -ldflags='-s -w' ./
@@ -54,14 +54,14 @@ jobs:
     - name: Set variables
       shell: bash
       run: |
-          echo "NGstring=$(cat ${{ github.workspace }}/V2rayNG/app/build.gradle | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}' )" >> $GITHUB_ENV
-          //echo "NGstring=${{ env.NGstring }}"
-          echo "NGVERSION=sed -i 's/\"//g') <<< ${{ env.NGstring }}" >> $GITHUB_ENV
-          echo "NGVERSION=${{ env.NGVERSION }}"
+          cp ${{ github.workspace }}/V2rayNG/app/build.gradle ./build.gradle.tmp
+          sed -i 's/\"//g' ./build.gradle.tmp
+          echo "NG_VERSION=$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "NG_VERSION=${{ env.NG_VERSION }}"
           
-          echo "ASSET_NAME=v2rayNG_v$${{ env.NGVERSION }}_arm64-v8a" >> $GITHUB_ENV
-          echo "TAG_NAME=v${{ env.NGVERSION }} >> $GITHUB_ENV
-          echo "RELEASE_NAME=x2ray-ng-v${{ env.NGVERSION }} >> $GITHUB_ENV
+          echo "ASSET_NAME=v2rayNG_v${{ env.NG_VERSION }}_arm64-v8a" >> $GITHUB_ENV
+          echo "TAG_NAME=v${{ env.NG_VERSION }} >> $GITHUB_ENV
+          echo "RELEASE_NAME=x2ray-ng-v${{ env.NG_VERSION }} >> $GITHUB_ENV
           
     - name: Build APK
       run: |
@@ -75,6 +75,6 @@ jobs:
       with:
         name: apk
         path: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NGVERSION }}_arm64-v8a.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_arm64-v8a.apk
           
           
