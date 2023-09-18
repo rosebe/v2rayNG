@@ -45,7 +45,7 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
-        go get github.com/xtls/xray-core@92bec537f1d7 || true
+        go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
         gomobile bind -v -androidapi 19 -ldflags='-s -w' ./
@@ -62,8 +62,8 @@ jobs:
           
           echo "ASSET_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
           echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
-          echo "RELEASE_NAME=x2ray-ng-v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
-          
+          echo "RELEASE_NAME=v2ray-ng-v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          rm -rf ./build.gradle.tmp
     
           
     - name: Build APK
@@ -86,10 +86,16 @@ jobs:
       with:
         repo_token: ${{ github.token }}          
         tag: ${{ env.TAG_NAME }}
-        release_name: ${{ env.RELEASE_NAME }}
+        release_name: ${{ env.RELEASE_NAME }} Xray-core commit id: ${{ github.event.inputs.XRAY_CORE_VERSION }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_*.apk
-        body: "### Happy play for xray-ng-v${{ env.NG_VERSION }}"
+        body: "### Happy play for v2ray-ng-v${{ env.NG_VERSION }} 
+        
+              - [ ] [Xray core](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
+              
+                              
+              
+              "
         overwrite: true
         file_glob: true
