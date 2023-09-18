@@ -90,9 +90,5 @@ jobs:
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_arm64-v8a.apk
-            ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_armeabi-v7a.apk
-            ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_x86.apk
-            ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_x86_64.apk
-            ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_null.apk
         body: "### Happy play for xray-ng-v${{ env.NG_VERSION }}"
         overwrite: true     
