@@ -64,7 +64,7 @@ jobs:
           echo "NG_VERSION: ${{ env.NG_VERSION }}"
           
           echo "ASSET_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
-          echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')_${{ github.event.inputs.XRAY_CORE_VERSION }}" >> $GITHUB_ENV
           echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}') build on $(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
     
@@ -93,8 +93,8 @@ jobs:
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_*.apk
-        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} 
-        
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }}
+
               - [ ] [Xray core](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
               
               
