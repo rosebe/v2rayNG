@@ -1,14 +1,17 @@
 name: Build APK
 
 on:
-  push:
+  #push:
   workflow_dispatch:
     inputs:
       XRAY_CORE_VERSION:
         description: 'Xray core version or commit hash'
         required: false
+        default: 'c00e56c0dadf'
 
-
+env:
+  TZ: Asia/Shanghai
+  
 jobs:
   build:
     runs-on: ubuntu-latest
