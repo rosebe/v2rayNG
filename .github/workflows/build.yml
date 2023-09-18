@@ -1,43 +1,5 @@
-name: Build APK
-
-on:
-  push:
-  workflow_dispatch:
-    inputs:
-      XRAY_CORE_VERSION:
-        description: 'Xray core version or commit hash'
-        required: false
-
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Setup Golang
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-        check-latest: true
-
-    - name: Install gomobile
-      run: |
-        go install golang.org/x/mobile/cmd/gomobile@latest
-        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-
-    - name: Setup Android environment
-      uses: android-actions/setup-android@v2
   
+
 
     - name: Build dependencies
       run: |
@@ -50,6 +12,7 @@ jobs:
         go mod tidy -v
         gomobile bind -v -androidapi 19 -ldflags='-s -w' ./
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
+
 
     - name: Set variables
       id: step_one
@@ -86,16 +49,15 @@ jobs:
       with:
         repo_token: ${{ github.token }}          
         tag: ${{ env.TAG_NAME }}
-        release_name: ${{ env.RELEASE_NAME }} Xray-core commit id: ${{ github.event.inputs.XRAY_CORE_VERSION }}
+        release_name: ${{ env.RELEASE_NAME }} Xray-core commit id:${{ github.event.inputs.XRAY_CORE_VERSION }} build on $(date +%Y_%m_%d-%H:%M:%S)
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_*.apk
         body: "### Happy play for v2ray-ng-v${{ env.NG_VERSION }} 
-        
-              - [ ] [Xray core](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
-              
-                              
-              
+
+
+             - [ ] [Xray core](https:github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
+
               "
         overwrite: true
         file_glob: true
