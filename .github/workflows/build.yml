@@ -64,29 +64,7 @@ jobs:
           echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
           echo "RELEASE_NAME=x2ray-ng-v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
           
-    - name: Use variables
-      id: step_two
-      shell: bash
-      run: |
-          echo "NG_VERSION:"
-          echo "${{ env.NG_VERSION }}"
-          echo ""
-          echo "ASSET_NAME: "
-          echo "v2rayNG_v${{ env.NG_VERSION }}_arm64-v8a"
-          echo ""
-          echo "TAG_NAME: "
-          echo "v${{ env.NG_VERSION }}"
-          echo ""
-          echo "RELEASE_NAME: "
-          echo "x2ray-ng-v${{ env.NG_VERSION }}"
-          echo ""
-          echo "GITHUB_WORKFLOW is:" $GITHUB_WORKFLOW
-          echo ""
-          echo "GITHUB_ENV 1: "$GITHUB_ENV
-          echo "GITHUB_ENV 2: ${GITHUB_ENV} "
-          echo "GITHUB_ENV 3: ${{ GITHUB_ENV }}"
-          echo ""
-          echo "GITHUB_EVENT_NAME is:" $github.event_name
+    
           
     - name: Build APK
       run: |
