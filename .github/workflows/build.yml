@@ -65,9 +65,9 @@ jobs:
           echo "RELEASE_NAME=x2ray-ng-v${{ env.NG_VERSION }}" >> $GITHUB_ENV
           
     - name: Use variables
-        id: step_two
-        shell: bash
-        run: |
+      id: step_two
+      shell: bash
+      run: |
           echo "NG_VERSION:"
           echo "${{ env.NG_VERSION }}"
           echo ""
@@ -103,19 +103,18 @@ jobs:
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_arm64-v8a.apk
           
     - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@2.7.0
-        #if: github.event_name == 'release'
-        with:
-          repo_token: ${{ github.token }}          
-          tag: ${{ env.TAG_NAME }}
-          release_name: ${{ env.RELEASE_NAME }}
-          #asset_name: ${{ env.ASSET_NAME }}
-          file: |
+      uses: svenstaro/upload-release-action@2.7.0
+      #if: github.event_name == 'release'
+      with:
+        repo_token: ${{ github.token }}          
+        tag: ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
+        #asset_name: ${{ env.ASSET_NAME }}
+        file: |
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_arm64-v8a.apk
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_armeabi-v7a.apk
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_x86.apk
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_x86_64.apk
             ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_null.apk
-          body: "### Happy play for xray-ng-v${{ env.NG_VERSION }}"
-                
-          overwrite: true     
+        body: "### Happy play for xray-ng-v${{ env.NG_VERSION }}"
+        overwrite: true     
