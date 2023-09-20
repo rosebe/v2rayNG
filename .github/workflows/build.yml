@@ -7,8 +7,8 @@ on:
       XRAY_CORE_VERSION:
         description: 'Xray core version or commit hash'
         required: false
-        default: 'c00e56c0dadf'
-
+        default: '2b295ce29b1f'
+        
 env:
   TZ: Asia/Shanghai
   
@@ -46,9 +46,9 @@ jobs:
       run: |
         mkdir ${{ github.workspace }}/build
         cd ${{ github.workspace }}/build
-        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
+        git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
-        go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
+        go get github.com/rosebe/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
         gomobile bind -v -androidapi 19 -ldflags='-s -w' ./
@@ -93,9 +93,9 @@ jobs:
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_*.apk
-        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }}
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2
 
-              - [ ] [Xray core](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
+              - [ ] [Xray core](https://github.com/rosebe/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
               
               
               "
