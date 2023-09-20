@@ -64,7 +64,7 @@ jobs:
           echo "NG_VERSION: ${{ env.NG_VERSION }}"
           
           echo "ASSET_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
-          echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')_$(((`date -d "$(date "+%Y-%m-%d %H:%M:%S")" +%s`*1000+10#`date "+%N"`/1000000)/1000)) >> $GITHUB_ENV
+          echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')_$(((`date -d "$(date "+%Y-%m-%d %H:%M:%S")" +%s`*1000+10#`date "+%N"`/1000000)/1000))" >> $GITHUB_ENV
           echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}') build on $(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
     
