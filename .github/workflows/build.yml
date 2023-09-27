@@ -48,6 +48,7 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
+        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}\")/" libv2ray_main.go
         go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
