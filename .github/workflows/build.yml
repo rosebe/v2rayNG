@@ -11,6 +11,11 @@ on:
         
 env:
   TZ: Asia/Shanghai
+  ALIAS: ${{ secrets.ALIAS }}
+  KEYPASSWORD: ${{ secrets.KEYPASSWORD }}
+  KEYSTOREPASSWORD: ${{ secrets.KEYSTOREPASSWORD }}
+  SIGNINGKEYBASE64: ${{ secrets.SIGNINGKEYBASE64 }}
+
   
 jobs:
   build:
@@ -18,7 +23,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Java
       uses: actions/setup-java@v3
@@ -48,6 +53,7 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
+        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}\")/" libv2ray_main.go                                                                                                                   
         go get github.com/rosebe/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
@@ -74,14 +80,28 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         chmod 777 *
         sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
-        ./gradlew assembleDebug
+        ./gradlew assembleRelease
+
+    - name: List APK files
+      run: |
+        find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
+    
+    - name: Sign APK files
+      uses: ilharp/sign-android-release@v1
+      with:
+        releaseDir: V2rayNG/app/build/outputs/apk/release/
+        keyAlias: ${{ env.ALIAS }}
+        keyPassword: ${{ env.KEYPASSWORD }}
+        keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
+        signingKey: ${{ env.SIGNINGKEYBASE64 }}
+        buildToolsVersion: 33.0.2   
     
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
         name: apk
         path: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_arm64-v8a.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*_arm64-v8a-signed.apk
           
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
@@ -92,7 +112,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/v2rayNG_${{ env.NG_VERSION }}_*.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*signed.apk
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2
 
               - [ ] [Xray core](https://github.com/rosebe/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
