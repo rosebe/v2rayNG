@@ -7,7 +7,8 @@ on:
       XRAY_CORE_VERSION:
         description: 'Xray core version or commit hash'
         required: false
-        default: '2b295ce29b1f'
+        default: '注意 https://github.com/rosebe/AndroidLibXrayLite/blob/alpn_h2/go.mod 中的
+        replace github.com/xtls/xray-core v1.8.1 => github.com/rosebe/xray-core 63c6b85 commit id 的一致性'
         
 env:
   TZ: Asia/Shanghai
@@ -53,7 +54,7 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
-        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}\")/" libv2ray_main.go                                                                                                                   
+        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}_alpn_h2\")/" libv2ray_main.go                                                                                                                   
         go get github.com/rosebe/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
