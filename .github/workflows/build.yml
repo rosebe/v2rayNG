@@ -5,10 +5,11 @@ on:
   workflow_dispatch:
     inputs:
       XRAY_CORE_VERSION:
-        description: 'Xray core version or commit hash'
+        description: 'Xray core version or commit hash 
+        (注意 https://github.com/rosebe/AndroidLibXrayLite/blob/alpn_h2/go.mod 中的
+        replace github.com/xtls/xray-core v1.8.1 => github.com/rosebe/xray-core 63c6b85 commit id 的一致性)'
         required: false
-        default: '注意 https://github.com/rosebe/AndroidLibXrayLite/blob/alpn_h2/go.mod 中的
-        replace github.com/xtls/xray-core v1.8.1 => github.com/rosebe/xray-core 63c6b85 commit id 的一致性'
+        default: '63c6b85'
         
 env:
   TZ: Asia/Shanghai
