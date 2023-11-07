@@ -7,9 +7,9 @@ on:
       XRAY_CORE_VERSION:
         description: 'Xray core version or commit hash:
         (注意：与 https://github.com/rosebe/AndroidLibXrayLite/blob/alpn_h2/go.mod 中的
-        replace github.com/xtls/xray-core v1.8.1 => github.com/rosebe/xray-core 81a0546 commit id 的一致性)'
+        replace github.com/xtls/xray-core v1.8.1 => github.com/rosebe/xray-core 02a6dd2 commit id 的一致性)'
         required: false
-        default: '81a0546'
+        default: '02a6dd2'
         
 env:
   TZ: Asia/Shanghai
