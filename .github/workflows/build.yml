@@ -1,21 +1,29 @@
 name: Build APK
 
 on:
-  push:
+  #push:
   workflow_dispatch:
     inputs:
       XRAY_CORE_VERSION:
         description: 'Xray core version or commit hash'
         required: false
+        default: 'c00e56c0dadf'
 
+env:
+  TZ: Asia/Shanghai
+  ALIAS: ${{ secrets.ALIAS }}
+  KEYPASSWORD: ${{ secrets.KEYPASSWORD }}
+  KEYSTOREPASSWORD: ${{ secrets.KEYSTOREPASSWORD }}
+  SIGNINGKEYBASE64: ${{ secrets.SIGNINGKEYBASE64 }}
 
+  
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4.1.0
       
     - name: Setup Java
       uses: actions/setup-java@v3
@@ -26,7 +34,8 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v4
       with:
-        go-version: '1.19.11'
+        go-version: '1.21'
+        check-latest: true
 
     - name: Install gomobile
       run: |
@@ -44,21 +53,71 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
+        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}\")/" libv2ray_main.go
         go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
         gomobile bind -v -androidapi 19 -ldflags='-s -w' ./
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
 
+    - name: Set variables
+      id: step_one
+      shell: bash
+      run: |
+          cp ${{ github.workspace }}/V2rayNG/app/build.gradle ./build.gradle.tmp
+          sed -i 's/\"//g' ./build.gradle.tmp
+          echo "NG_VERSION=$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "NG_VERSION: ${{ env.NG_VERSION }}"
+          
+          echo "ASSET_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')" >> $GITHUB_ENV
+          echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}')_$(((`date -d "$(date "+%Y-%m-%d %H:%M:%S")" +%s`*1000+10#`date "+%N"`/1000000)/1000))" >> $GITHUB_ENV
+          echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $2}') build on $(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
+          rm -rf ./build.gradle.tmp
+    
+          
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
         chmod 777 *
         sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
-        ./gradlew assembleDebug
+        ./gradlew assembleRelease
+    
+    - name: List APK files
+      run: |
+        find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
+    
+    - name: Sign APK files
+      uses: ilharp/sign-android-release@v1
+      with:
+        releaseDir: V2rayNG/app/build/outputs/apk/release/
+        keyAlias: ${{ env.ALIAS }}
+        keyPassword: ${{ env.KEYPASSWORD }}
+        keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
+        signingKey: ${{ env.SIGNINGKEYBASE64 }}
+        buildToolsVersion: 33.0.2
 
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
         name: apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/debug/
+        path: |
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*_arm64-v8a-signed.apk
+          
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@2.7.0
+      #if: github.event_name == 'release'
+      with:
+        repo_token: ${{ github.token }}          
+        tag: ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
+        #asset_name: ${{ env.ASSET_NAME }}
+        file: |
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*signed.apk
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }}
+
+              - [ ] [Xray core](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> ${{ github.event.inputs.XRAY_CORE_VERSION }}
+              
+              
+              "
+        overwrite: true
+        file_glob: true
