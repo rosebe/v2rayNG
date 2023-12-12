@@ -25,7 +25,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
@@ -66,11 +65,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         setContentView(view)
         title = getString(R.string.title_server)
         setSupportActionBar(binding.toolbar)
-        if (!Utils.getDarkModeStatus(this)) {
-            WindowCompat.getInsetsController(window, window.decorView).apply {
-                isAppearanceLightStatusBars = true
-            }
-        }
 
         binding.fab.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
@@ -109,7 +103,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         binding.drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
         binding.navView.setNavigationItemSelectedListener(this)
-        binding.version.text = "v${BuildConfig.VERSION_NAME} (${SpeedtestUtil.getLibVersion()})"
+        "v${BuildConfig.VERSION_NAME} (${SpeedtestUtil.getLibVersion()})".also { binding.version.text = it }
 
         setupViewModel()
         copyAssets()
@@ -687,6 +681,9 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             }
             R.id.logcat -> {
                 startActivity(Intent(this, LogcatActivity::class.java))
+            }
+            R.id.privacy_policy-> {
+                Utils.openUri(this, AppConfig.v2rayNGPrivacyPolicy)
             }
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START)
