@@ -9,6 +9,7 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.util.MessageUtil
@@ -32,19 +33,35 @@ class QSTileService : TileService() {
         qsTile?.updateTile()
     }
 
+    /**
+     * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
+     * `registerReceiver(Context, BroadcastReceiver, IntentFilter, int)`.
+     */
+
     override fun onStartListening() {
         super.onStartListening()
         setState(Tile.STATE_INACTIVE)
         mMsgReceive = ReceiveMessageHandler(this)
-        registerReceiver(mMsgReceive, IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY))
+        val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.registerReceiver(applicationContext, mMsgReceive, mFilter, ContextCompat.RECEIVER_EXPORTED)
+        } else {
+            ContextCompat.registerReceiver(applicationContext, mMsgReceive, mFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        }
+
         MessageUtil.sendMsg2Service(this, AppConfig.MSG_REGISTER_CLIENT, "")
     }
 
     override fun onStopListening() {
         super.onStopListening()
 
-        unregisterReceiver(mMsgReceive)
-        mMsgReceive = null
+        try {
+            unregisterReceiver(mMsgReceive)
+            mMsgReceive = null
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     override fun onClick() {
@@ -53,6 +70,7 @@ class QSTileService : TileService() {
             Tile.STATE_INACTIVE -> {
                 Utils.startVServiceFromToggle(this)
             }
+
             Tile.STATE_ACTIVE -> {
                 Utils.stopVService(this)
             }
@@ -62,22 +80,26 @@ class QSTileService : TileService() {
     private var mMsgReceive: BroadcastReceiver? = null
 
     private class ReceiveMessageHandler(context: QSTileService) : BroadcastReceiver() {
-        internal var mReference: SoftReference<QSTileService> = SoftReference(context)
+        var mReference: SoftReference<QSTileService> = SoftReference(context)
         override fun onReceive(ctx: Context?, intent: Intent?) {
             val context = mReference.get()
             when (intent?.getIntExtra("key", 0)) {
                 AppConfig.MSG_STATE_RUNNING -> {
                     context?.setState(Tile.STATE_ACTIVE)
                 }
+
                 AppConfig.MSG_STATE_NOT_RUNNING -> {
                     context?.setState(Tile.STATE_INACTIVE)
                 }
+
                 AppConfig.MSG_STATE_START_SUCCESS -> {
                     context?.setState(Tile.STATE_ACTIVE)
                 }
+
                 AppConfig.MSG_STATE_START_FAILURE -> {
                     context?.setState(Tile.STATE_INACTIVE)
                 }
+
                 AppConfig.MSG_STATE_STOP_SUCCESS -> {
                     context?.setState(Tile.STATE_INACTIVE)
                 }
