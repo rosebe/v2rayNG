@@ -41,11 +41,11 @@ jobs:
         check-latest: false
         cache: false
     
-    - name: Patch Go use 600296
+    #- name: Patch Go use 600296
       #https://go-review.googlesource.com/c/go/+/600296
-      run: |
-        cd "$(go env GOROOT)"
-        curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
+      #run: |
+        #cd "$(go env GOROOT)"
+        #curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
     
     - name: Set Golang-version
       run: |
