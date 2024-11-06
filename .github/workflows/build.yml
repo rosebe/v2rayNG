@@ -33,28 +33,30 @@ jobs:
         distribution: 'temurin'
         #java-version: '17'
         java-version: '21'
+        cache: 'gradle'
+    #- run: ./gradlew build --no-daemon
         
     - name: Setup Golang
       uses: actions/setup-go@v5.0.2
       with:
-        go-version: '1.22.4'
-        check-latest: false
+        go-version: '1.23'
+        check-latest: true
         cache: false
     
-    #- name: Patch Go use 600296
+    - name: Patch Go use 600296
       #https://go-review.googlesource.com/c/go/+/600296
-      #run: |
-        #cd "$(go env GOROOT)"
-        #curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
-    
-    - name: Set Golang-version
+      run: |
+        cd "$(go env GOROOT)"
+        curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
+ 
+    - name: Set Golang-version 
       run: |
         echo "GOLANG-VERSION=$(go version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV
     
     - name: Install gomobile
       run: |
-        go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
-        #go install golang.org/x/mobile/cmd/gomobile@latest
+        #go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
+        go install golang.org/x/mobile/cmd/gomobile@latest
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
 
@@ -68,14 +70,14 @@ jobs:
         sed -i 's/PRIVATE_VLAN4_ROUTER = "26.26.26.2"/PRIVATE_VLAN4_ROUTER = "10.1.1.2"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
         sed -i 's/PRIVATE_VLAN6_CLIENT = "da26:2626::1"/PRIVATE_VLAN6_CLIENT = "::ffff:a01:101"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
         sed -i 's/PRIVATE_VLAN6_ROUTER = "da26:2626::2"/PRIVATE_VLAN6_ROUTER = "::ffff:a01:102"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-    
+
     - name: Build dependencies
       run: |
         mkdir ${{ github.workspace }}/build
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
-        sed -i "s/go 1.22.2/go 1.22.4/" go.mod
+        #sed -i "s/go 1.22.2/go 1.22.4/" go.mod
         sed -i "s/github.com\/rosebe\/xray-core 994e87cbe103/github.com\/rosebe\/xray-core ${{ github.event.inputs.XRAY_CORE_VERSION }}/" go.mod
         sed -i "s/v2core.Version())/v2core.Version() + \" Rosebe_alpn_h2@${{ github.event.inputs.XRAY_CORE_VERSION }}, Golang ${{ env.GOLANG-VERSION }}\")/" libv2ray_main.go                                                                                                                   
         go get github.com/rosebe/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
@@ -110,12 +112,13 @@ jobs:
                     
     - name: Build APK
       run: |
-        #sed -i "s/gradle-8.9-bin.zip/gradle-8.10.2-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
+        sed -i "s/gradle-8.10.2-bin.zip/gradle-8.11-rc-1-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}/V2rayNG
         #chmod 777 *
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease
+        #./gradlew build --no-daemon
+        ./gradlew assembleRelease --no-daemon
 
            
     - name: List APK files
