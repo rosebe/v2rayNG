@@ -5,12 +5,10 @@ on:
   workflow_dispatch:
     inputs:
       XRAY_CORE_VERSION:
-        description: 'Xray core version or commit hash:
-        (注意：与 https://github.com/rosebe/AndroidLibXrayLite/blob/alpn_h2/go.mod 中的
-        replace github.com/xtls/xray-core v1.8.1 => github.com/rosebe/xray-core 994e87cbe103 commit id 的一致性)'
+        description: 'Xray core version or commit hash'
         required: false
-        default: '994e87cbe103'
-        
+        default: '46d6b9f57a2c'
+
 env:
   TZ: Asia/Shanghai
   ALIAS: ${{ secrets.ALIAS }}
@@ -34,53 +32,44 @@ jobs:
         #java-version: '17'
         java-version: '21'
         cache: 'gradle'
-    #- run: ./gradlew build --no-daemon
-        
+
     - name: Setup Golang
       uses: actions/setup-go@v5.0.2
       with:
-        go-version: '1.23'
-        check-latest: true
+        go-version: '1.23.2'
         cache: false
+        #check-latest: true
     
+    - name: Set Golang-version 
+      run: |
+        echo "GOLANG-VERSION=$(go version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV  
+
     - name: Patch Go use 600296
       #https://go-review.googlesource.com/c/go/+/600296
       run: |
         cd "$(go env GOROOT)"
         curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
- 
-    - name: Set Golang-version 
-      run: |
-        echo "GOLANG-VERSION=$(go version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV
     
     - name: Install gomobile
       run: |
-        #go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
-        go install golang.org/x/mobile/cmd/gomobile@latest
+        go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
+        #go install golang.org/x/mobile/cmd/gomobile@latest
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
 
-    - name: Setup Android environment SDK
+    - name: Setup Android environment
       uses: android-actions/setup-android@v3.2.1
   
-    - name: Setup VpnService.kt patch
-      run: |
-        sed -i "s/VPN_MTU = 1500/VPN_MTU = 9000/" ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN4_CLIENT = "26.26.26.1"/PRIVATE_VLAN4_CLIENT = "10.1.1.1"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN4_ROUTER = "26.26.26.2"/PRIVATE_VLAN4_ROUTER = "10.1.1.2"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN6_CLIENT = "da26:2626::1"/PRIVATE_VLAN6_CLIENT = "::ffff:a01:101"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN6_ROUTER = "da26:2626::2"/PRIVATE_VLAN6_ROUTER = "::ffff:a01:102"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
 
     - name: Build dependencies
       run: |
         mkdir ${{ github.workspace }}/build
         cd ${{ github.workspace }}/build
-        git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
+        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
-        #sed -i "s/go 1.22.2/go 1.22.4/" go.mod
-        sed -i "s/github.com\/rosebe\/xray-core 994e87cbe103/github.com\/rosebe\/xray-core ${{ github.event.inputs.XRAY_CORE_VERSION }}/" go.mod
-        sed -i "s/v2core.Version())/v2core.Version() + \" Rosebe_alpn_h2@${{ github.event.inputs.XRAY_CORE_VERSION }}, Golang ${{ env.GOLANG-VERSION }}\")/" libv2ray_main.go                                                                                                                   
-        go get github.com/rosebe/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
+        #sed -i "s/go 1.21.4/go 1.22/" go.mod
+        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}\")/" libv2ray_main.go
+        go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
         gomobile bind -v -androidapi 21 -ldflags='-s -w' ./
@@ -90,7 +79,7 @@ jobs:
       run: |
         find /home/runner/go/pkg/mod/github.com/  -type f -exec du -h {} \; | grep ${{ github.event.inputs.XRAY_CORE_VERSION }}/core/core.go
         echo "Xray_Source_Path=$(find /home/runner/go/pkg/mod/github.com/  -type f -exec du -h {} \; | grep ${{ github.event.inputs.XRAY_CORE_VERSION }}/core/core.go | awk '{print $2}' )" >> $GITHUB_ENV
-    
+                          
     - name: Set variables
       id: step_one
       shell: bash
@@ -98,7 +87,7 @@ jobs:
           echo "Xray_Version_x=$(cat ${{ env.Xray_Source_Path }} | grep 'Version_x byte =' | awk '{print $4}') " >> $GITHUB_ENV
           echo "Xray_Version_y=$(cat ${{ env.Xray_Source_Path }} | grep 'Version_y byte =' | awk '{print $4}') " >> $GITHUB_ENV
           echo "Xray_Version_z=$(cat ${{ env.Xray_Source_Path }} | grep 'Version_z byte =' | awk '{print $4}') " >> $GITHUB_ENV
- 
+          
           cp ${{ github.workspace }}/V2rayNG/app/build.gradle.kts ./build.gradle.tmp
           sed -i 's/\"//g' ./build.gradle.tmp
           echo "NG_VERSION=$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}')" >> $GITHUB_ENV
@@ -108,19 +97,16 @@ jobs:
           echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}').$(((`date -d "$(date "+%Y-%m-%d %H:%M:%S")" +%s`*1000+10#`date "+%N"`/1000000)/1000))" >> $GITHUB_ENV
           echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}') build on $(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
-
-                    
+    
     - name: Build APK
       run: |
-        sed -i "s/gradle-8.10.2-bin.zip/gradle-8.11-rc-1-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}/V2rayNG
         #chmod 777 *
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         chmod 755 gradlew
         #./gradlew build --no-daemon
         ./gradlew assembleRelease --no-daemon
-
-           
+    
     - name: List APK files
       run: |
         find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
@@ -133,11 +119,10 @@ jobs:
         keyPassword: ${{ env.KEYPASSWORD }}
         keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
         signingKey: ${{ env.SIGNINGKEYBASE64 }}
-        buildToolsVersion: 33.0.2   
-    
+        buildToolsVersion: 33.0.2
+
     - name: Upload APK
       uses: actions/upload-artifact@v4.4.3
-      if: ${{  success() }}
       with:
         name: apk
         path: |
@@ -154,11 +139,11 @@ jobs:
         file: |
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*arm64-v8a*signed.apk
           
-        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }}
         
-               ### Go Compiler && Toolchain : Golang ${{ env.GOLANG-VERSION }}
+              ### Go Compiler && Toolchain : Golang ${{ env.GOLANG-VERSION }}
 
-              - [ ] [Xray core ( __Rosebe__ )](https://github.com/rosebe/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
+              - [ ] [Xray core ( __Origin__ )](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
               
               
               "
@@ -176,11 +161,11 @@ jobs:
         file: |
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*armeabi-v7a*signed.apk
                   
-        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }}
         
                ### Go Compiler && Toolchain : Golang ${{ env.GOLANG-VERSION }}
 
-              - [ ] [Xray core ( __Rosebe__ )](https://github.com/rosebe/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
+              - [ ] [Xray core] ( __Origin__ )(https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
               
               
               "
@@ -198,11 +183,11 @@ jobs:
         file: |
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*x86*signed.apk
                   
-        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }}
         
                ### Go Compiler && Toolchain : Golang ${{ env.GOLANG-VERSION }}
 
-              - [ ] [Xray core ( __Rosebe__ )](https://github.com/rosebe/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
+              - [ ] [Xray core ( __Origin__ )](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
               
               
               "
@@ -220,11 +205,11 @@ jobs:
         file: |
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*universal*signed.apk
         
-        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
+        body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} 
         
                ### Go Compiler && Toolchain : Golang ${{ env.GOLANG-VERSION }}
 
-              - [ ] [Xray core ( __Rosebe__ )](https://github.com/rosebe/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
+              - [ ] [Xray core ( __Origin__ )](https://github.com/XTLS/Xray-core/commit/${{ github.event.inputs.XRAY_CORE_VERSION }}) version or commit ID =>> V${{ env.Xray_Version_x }}.${{ env.Xray_Version_y }}.${{ env.Xray_Version_z }} @${{ github.event.inputs.XRAY_CORE_VERSION }}
               
               
               "
