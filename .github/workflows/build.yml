@@ -63,13 +63,13 @@ jobs:
     - name: Setup Android environment SDK
       uses: android-actions/setup-android@v3.2.1
   
-    - name: Setup VpnService.kt patch
-      run: |
+    #- name: Setup VpnService.kt patch
+      #run: |
         #sed -i "s/VPN_MTU = 1500/VPN_MTU = 9000/" ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN4_CLIENT = "26.26.26.1"/PRIVATE_VLAN4_CLIENT = "10.1.1.1"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN4_ROUTER = "26.26.26.2"/PRIVATE_VLAN4_ROUTER = "10.1.1.2"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN6_CLIENT = "da26:2626::1"/PRIVATE_VLAN6_CLIENT = "::ffff:a01:101"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
-        sed -i 's/PRIVATE_VLAN6_ROUTER = "da26:2626::2"/PRIVATE_VLAN6_ROUTER = "::ffff:a01:102"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
+        #sed -i 's/PRIVATE_VLAN4_CLIENT = "26.26.26.1"/PRIVATE_VLAN4_CLIENT = "10.1.1.1"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
+        #sed -i 's/PRIVATE_VLAN4_ROUTER = "26.26.26.2"/PRIVATE_VLAN4_ROUTER = "10.1.1.2"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
+        #sed -i 's/PRIVATE_VLAN6_CLIENT = "da26:2626::1"/PRIVATE_VLAN6_CLIENT = "::ffff:a01:101"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
+        #sed -i 's/PRIVATE_VLAN6_ROUTER = "da26:2626::2"/PRIVATE_VLAN6_ROUTER = "::ffff:a01:102"/' ${{ github.workspace }}/V2rayNG/app/src/main/kotlin/com/v2ray/ang/service/V2RayVpnService.kt
 
     - name: Build dependencies
       run: |
@@ -112,7 +112,7 @@ jobs:
                     
     - name: Build APK
       run: |
-        #sed -i "s/gradle-8.10.2-bin.zip/gradle-8.11-rc-2-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
+        sed -i "s/gradle-8.10.2-bin.zip/gradle-8.11-rc-2-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}/V2rayNG
         #chmod 777 *
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
