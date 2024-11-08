@@ -33,7 +33,7 @@ jobs:
         distribution: 'temurin'
         #java-version: '17'
         java-version: '21'
-        #cache: 'gradle'
+        cache: 'gradle'
     #- run: ./gradlew build --no-daemon
         
     - name: Setup Golang
@@ -118,8 +118,8 @@ jobs:
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         chmod 755 gradlew
         #./gradlew build --no-daemon
-        #./gradlew assembleRelease --no-daemon
-        ./gradlew assembleRelease
+        ./gradlew assembleRelease --no-daemon
+        #./gradlew assembleRelease
            
     - name: List APK files
       run: |
