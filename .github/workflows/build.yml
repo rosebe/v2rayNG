@@ -59,8 +59,12 @@ jobs:
 
     - name: Setup Android environment
       uses: android-actions/setup-android@v3.2.1
-  
 
+
+    - name: Set Build Time 
+      run: |
+        echo "BUILD_TIME=$(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
+        
     - name: Build dependencies
       run: |
         mkdir ${{ github.workspace }}/build
@@ -68,7 +72,7 @@ jobs:
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
         #sed -i "s/go 1.21.4/go 1.22/" go.mod
-        sed -i "s/v2core.Version())/v2core.Version() + \" @${{ github.event.inputs.XRAY_CORE_VERSION }}, build on $(date +%Y_%m_%d-%H:%M:%S), by Golang ${{ env.GOLANG-VERSION }} \")/" libv2ray_main.go
+        sed -i "s/v2core.Version())/v2core.Version() + \" @${{ github.event.inputs.XRAY_CORE_VERSION }}, build on ${{ env.BUILD_TIME }}, by Golang ${{ env.GOLANG-VERSION }}. \")/" libv2ray_main.go
         go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
@@ -95,7 +99,7 @@ jobs:
           
           echo "ASSET_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}')" >> $GITHUB_ENV
           echo "TAG_NAME=v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}').$(((`date -d "$(date "+%Y-%m-%d %H:%M:%S")" +%s`*1000+10#`date "+%N"`/1000000)/1000))" >> $GITHUB_ENV
-          echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}') build on $(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
+          echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}') build on ${{ env.BUILD_TIME }}" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
     
     - name: Build APK
