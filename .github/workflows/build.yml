@@ -68,7 +68,7 @@ jobs:
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
         #sed -i "s/go 1.21.4/go 1.22/" go.mod
-        sed -i "s/v2core.Version())/v2core.Version() + \"@${{ github.event.inputs.XRAY_CORE_VERSION }}\")/" libv2ray_main.go
+        sed -i "s/v2core.Version())/v2core.Version() + \" @${{ github.event.inputs.XRAY_CORE_VERSION }}, build on $(date +%Y_%m_%d-%H:%M:%S), by Golang ${{ env.GOLANG-VERSION }} \")/" libv2ray_main.go
         go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         gomobile init
         go mod tidy -v
