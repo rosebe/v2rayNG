@@ -15,6 +15,7 @@ object SocksFmt : FmtBase() {
 
         val uri = URI(Utils.fixIllegalUrl(str))
         if (uri.idnHost.isEmpty()) return null
+        if (uri.port <= 0) return null
 
         config.remarks = Utils.urlDecode(uri.fragment.orEmpty())
         config.server = uri.idnHost
@@ -44,7 +45,7 @@ object SocksFmt : FmtBase() {
     fun toOutbound(profileItem: ProfileItem): OutboundBean? {
         val outboundBean = OutboundBean.create(EConfigType.SOCKS)
 
-        outboundBean?.settings?.servers?.get(0)?.let { server ->
+        outboundBean?.settings?.servers?.first()?.let { server ->
             server.address = profileItem.server.orEmpty()
             server.port = profileItem.serverPort.orEmpty().toInt()
             if (profileItem.username.isNotNullEmpty()) {
