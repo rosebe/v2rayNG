@@ -35,7 +35,11 @@ jobs:
         java-version: '21'
         cache: 'gradle'
     #- run: ./gradlew build --no-daemon
-        
+
+    - name: Get go.sum
+      run: |
+        curl -L "https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go.sum" -o go.sum
+
     - name: Setup Golang
       uses: actions/setup-go@v5.1.0
       with:
