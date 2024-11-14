@@ -88,7 +88,7 @@ jobs:
         gomobile clean
         gomobile init
         go mod tidy -v
-        gomobile bind -v -androidapi 21 -ldflags='-s -w' ./
+        gomobile bind -a -v -androidapi 21 -ldflags='-s -w' ./
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
 
     - name: Upload go.mod
