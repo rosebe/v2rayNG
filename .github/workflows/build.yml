@@ -37,11 +37,11 @@ jobs:
     #- run: ./gradlew build --no-daemon
         
     - name: Setup Golang
-      uses: actions/setup-go@v5.0.2
+      uses: actions/setup-go@v5.1.0
       with:
         go-version: '1.22.4'
         check-latest: false
-        cache: false
+        cache: true
     
     #- name: Patch Go use 600296
       #https://go-review.googlesource.com/c/go/+/600296
