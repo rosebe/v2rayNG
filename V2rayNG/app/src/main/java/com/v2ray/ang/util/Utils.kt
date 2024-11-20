@@ -295,7 +295,7 @@ object Utils {
 
     fun urlEncode(url: String): String {
         return try {
-            URLEncoder.encode(url, Charsets.UTF_8.toString())
+            URLEncoder.encode(url, Charsets.UTF_8.toString()).replace("+", "%20")
         } catch (e: Exception) {
             e.printStackTrace()
             url
@@ -396,7 +396,7 @@ object Utils {
     }
 
 
-    fun setNightMode(context: Context) {
+    fun setNightMode() {
         when (MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT, "0")) {
             "0" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             "1" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)

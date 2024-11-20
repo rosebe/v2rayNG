@@ -6,6 +6,7 @@ import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.V2rayConfig.OutboundBean
 import com.v2ray.ang.extension.idnHost
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import java.net.URI
 
@@ -25,31 +26,7 @@ object VlessFmt : FmtBase() {
         config.password = uri.userInfo
         config.method = queryParam["encryption"] ?: "none"
 
-        config.network = queryParam["type"] ?: "tcp"
-        config.headerType = queryParam["headerType"]
-        config.host = queryParam["host"]
-        config.path = queryParam["path"]
-
-        config.seed = queryParam["seed"]
-        config.quicSecurity = queryParam["quicSecurity"]
-        config.quicKey = queryParam["key"]
-        config.mode = queryParam["mode"]
-        config.serviceName = queryParam["serviceName"]
-        config.authority = queryParam["authority"]
-
-        config.security = queryParam["security"]
-        config.insecure = if (queryParam["allowInsecure"].isNullOrEmpty()) {
-            allowInsecure
-        } else {
-            queryParam["allowInsecure"].orEmpty() == "1"
-        }
-        config.sni = queryParam["sni"]
-        config.fingerPrint = queryParam["fp"]
-        config.alpn = queryParam["alpn"]
-        config.publicKey = queryParam["pbk"]
-        config.shortId = queryParam["sid"]
-        config.spiderX = queryParam["spx"]
-        config.flow = queryParam["flow"]
+       getItemFormQuery(config, queryParam, allowInsecure)
 
         return config
     }
@@ -85,6 +62,8 @@ object VlessFmt : FmtBase() {
             profileItem.serviceName,
             profileItem.authority,
         )
+        outboundBean?.streamSettings?.xhttpSettings?.mode = profileItem.xhttpMode
+        outboundBean?.streamSettings?.xhttpSettings?.extra = JsonUtil.parseString(profileItem.xhttpExtra)
 
         outboundBean?.streamSettings?.populateTlsSettings(
             profileItem.security.orEmpty(),
