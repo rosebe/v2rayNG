@@ -54,14 +54,14 @@
     <string name="server_lab_request_host_http">http host</string>
     <string name="server_lab_request_host_ws">ws host</string>
     <string name="server_lab_request_host_httpupgrade">httpupgrade host</string>
-    <string name="server_lab_request_host_splithttp">splithttp host</string>
+    <string name="server_lab_request_host_xhttp">xhttp host</string>
     <string name="server_lab_request_host_h2">h2 host</string>
     <string name="server_lab_request_host_quic">QUIC 加密方式</string>
     <string name="server_lab_request_host_grpc">gRPC Authority</string>
     <string name="server_lab_path">path</string>
     <string name="server_lab_path_ws">ws path</string>
     <string name="server_lab_path_httpupgrade">httpupgrade path</string>
-    <string name="server_lab_path_splithttp">splithttp path</string>
+    <string name="server_lab_path_xhttp">xhttp path </string>
     <string name="server_lab_path_h2">h2 path</string>
     <string name="server_lab_path_quic">QUIC 加密密钥</string>
     <string name="server_lab_path_kcp">kcp seed</string>
@@ -104,6 +104,7 @@
     <string name="server_lab_request_host6">Host(SNI)(可选)</string>
     <string name="toast_asset_copy_failed">失败, 请使用文件管理器</string>
     <string name="menu_item_add_file">添加文件</string>
+    <string name="menu_item_scan_qrcode">扫描 QRcode</string>
     <string name="title_url">URL</string>
     <string name="menu_item_download_file">下载文件</string>
     <string name="toast_action_not_allowed">禁止此项操作</string>
@@ -111,6 +112,8 @@
     <string name="server_lab_port_hop">跳跃端口(会覆盖服务器端口)</string>
     <string name="server_lab_port_hop_interval">端口跳跃间隔(秒)</string>
     <string name="server_lab_stream_pinsha256">SHA256证书指纹</string>
+    <string name="server_lab_xhttp_mode">XHTTP 模式</string>
+    <string name="server_lab_xhttp_extra">XHTTP Extra 原始 JSON，格式： { XHTTPObject }</string>
 
     <!-- PerAppProxyActivity -->
     <string name="title_user_asset_add_url">添加资产网址</string>
@@ -260,9 +263,10 @@
     <string name="routing_settings_delete">清空</string>
     <string name="routing_settings_rule_title">路由规则设置</string>
     <string name="routing_settings_add_rule">添加规则</string>
-    <string name="routing_settings_import_rulesets">导入预设规则集</string>
+    <string name="routing_settings_import_predefined_rulesets">导入预定义规则集</string>
     <string name="routing_settings_import_rulesets_tip">将删除现有的规则集，是否确定继续？</string>
     <string name="routing_settings_import_rulesets_from_clipboard">从剪贴板导入规则集</string>
+    <string name="routing_settings_import_rulesets_from_qrcode">从 QRcode 导入规则集</string>
     <string name="routing_settings_export_rulesets_to_clipboard">导出规则集至剪贴板</string>
     <string name="routing_settings_locked">锁定中，导入预设时不删除此规则</string>
 

@@ -56,14 +56,14 @@
     <string name="server_lab_request_host_http">http host</string>
     <string name="server_lab_request_host_ws">ws host</string>
     <string name="server_lab_request_host_httpupgrade">httpupgrade host</string>
-    <string name="server_lab_request_host_splithttp">splithttp host</string>
+    <string name="server_lab_request_host_xhttp">xhttp host</string>
     <string name="server_lab_request_host_h2">h2 host</string>
     <string name="server_lab_request_host_quic">QUIC security</string>
     <string name="server_lab_request_host_grpc">gRPC Authority</string>
     <string name="server_lab_path">path</string>
     <string name="server_lab_path_ws">ws path</string>
     <string name="server_lab_path_httpupgrade">httpupgrade path</string>
-    <string name="server_lab_path_splithttp">splithttp path</string>
+    <string name="server_lab_path_xhttp">xhttp path </string>
     <string name="server_lab_path_h2">h2 path</string>
     <string name="server_lab_path_quic">QUIC key</string>
     <string name="server_lab_path_kcp">kcp seed</string>
@@ -108,6 +108,7 @@
     <string name="menu_item_add_asset">إضافة أصل</string>
     <string name="menu_item_add_file">إضافة ملفات</string>
     <string name="menu_item_add_url">إضافة URL</string>
+    <string name="menu_item_scan_qrcode">مسح رمز الاستجابة السريعة (QRcode)</string>
     <string name="title_url" translatable="false">URL</string>
     <string name="menu_item_download_file">تنزيل الملفات</string>
     <string name="title_user_asset_add_url">إضافة عنوان URL للأصل</string>
@@ -118,6 +119,8 @@
     <string name="server_lab_port_hop">Port Hopping</string>
     <string name="server_lab_port_hop_interval">Port Hopping Interval</string>
     <string name="server_lab_stream_pinsha256">pinSHA256</string>
+    <string name="server_lab_xhttp_mode">XHTTP Mode</string>
+    <string name="server_lab_xhttp_extra">XHTTP Extra raw JSON, format: { XHTTPObject }</string>
 
     <!-- PerAppProxyActivity -->
     <string name="msg_dialog_progress">جار التحميل</string>
@@ -264,9 +267,10 @@
     <string name="routing_settings_delete">مسح</string>
     <string name="routing_settings_rule_title">Routing Rule Settings</string>
     <string name="routing_settings_add_rule">Add rule</string>
-    <string name="routing_settings_import_rulesets">Import ruleset</string>
+    <string name="routing_settings_import_predefined_rulesets">استيراد مجموعات قواعد محددة مسبقاً</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
     <string name="routing_settings_import_rulesets_from_clipboard">Import ruleset from clipboard</string>
+    <string name="routing_settings_import_rulesets_from_qrcode">استيراد مجموعة قواعد من رمز الاستجابة السريعة</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
 

@@ -54,14 +54,14 @@
     <string name="server_lab_request_host_http">http host</string>
     <string name="server_lab_request_host_ws">ws host</string>
     <string name="server_lab_request_host_httpupgrade">httpupgrade host</string>
-    <string name="server_lab_request_host_splithttp">splithttp host</string>
+    <string name="server_lab_request_host_xhttp">xhttp host</string>
     <string name="server_lab_request_host_h2">h2 host</string>
     <string name="server_lab_request_host_quic">QUIC security</string>
     <string name="server_lab_request_host_grpc">gRPC Authority</string>
     <string name="server_lab_path">path</string>
     <string name="server_lab_path_ws">ws path</string>
     <string name="server_lab_path_httpupgrade">httpupgrade path</string>
-    <string name="server_lab_path_splithttp">splithttp path</string>
+    <string name="server_lab_path_xhttp">xhttp path </string>
     <string name="server_lab_path_h2">h2 path</string>
     <string name="server_lab_path_quic">QUIC key</string>
     <string name="server_lab_path_kcp">kcp seed</string>
@@ -104,6 +104,7 @@
     <string name="server_lab_request_host6">میزبان (SNI) (اختیاری)</string>
     <string name="toast_asset_copy_failed">کپی فایل انجام نشد، لطفا از برنامه مدیریت فایل استفاده کنید</string>
     <string name="menu_item_add_file">افزودن فایل ‌ها</string>
+    <string name="menu_item_scan_qrcode">اسکن QRcode</string>
     <string name="title_url">URL</string>
     <string name="menu_item_download_file">دانلود فایل‌ ها</string>
     <string name="toast_action_not_allowed">این عمل ممنوع است</string>
@@ -111,6 +112,8 @@
     <string name="server_lab_port_hop">پورت پرش (درگاه سرور را بازنویسی می کند)</string>
     <string name="server_lab_port_hop_interval">فاصله پورت پرش (ثانیه)</string>
     <string name="server_lab_stream_pinsha256">pinSHA256</string>
+    <string name="server_lab_xhttp_mode">حالت XHTTP</string>
+    <string name="server_lab_xhttp_extra">جیسون خام XHTTP Extra، فرمت: { XHTTPObject }</string>
 
     <!-- PerAppProxyActivity -->
     <string name="title_user_asset_add_url">URL را اضافه کنید</string>
@@ -260,9 +263,10 @@
     <string name="routing_settings_delete">حذف</string>
     <string name="routing_settings_rule_title">تنظیمات قانون مسیریابی</string>
     <string name="routing_settings_add_rule">اضافه کردن قانون</string>
-    <string name="routing_settings_import_rulesets">وارد کردن مجموعه قوانین</string>
+    <string name="routing_settings_import_predefined_rulesets">وارد کردن مجموعه قوانین از پیش تعریف شده</string>
     <string name="routing_settings_import_rulesets_tip">مجموعه قوانین موجود حذف خواهند شد، آیا مطمئن هستید که ادامه می دهید؟</string>
     <string name="routing_settings_import_rulesets_from_clipboard">وارد کردن مجموعه قوانین از کلیپ بورد</string>
+    <string name="routing_settings_import_rulesets_from_qrcode">وارد کردن مجموعه قوانین از QRcode</string>
     <string name="routing_settings_export_rulesets_to_clipboard">صادر کردن مجموعه قوانین به کلیپ بورد</string>
     <string name="routing_settings_locked">قفل است، این قانون را هنگام وارد کردن از پیش تنظیم‌ها حفظ کنید</string>
 

@@ -54,14 +54,14 @@
     <string name="server_lab_request_host_http">http host</string>
     <string name="server_lab_request_host_ws">ws host</string>
     <string name="server_lab_request_host_httpupgrade">httpupgrade host</string>
-    <string name="server_lab_request_host_splithttp">splithttp host</string>
+    <string name="server_lab_request_host_xhttp">xhttp host</string>
     <string name="server_lab_request_host_h2">h2 host</string>
     <string name="server_lab_request_host_quic">QUIC 加密方式</string>
     <string name="server_lab_request_host_grpc">gRPC Authority</string>
     <string name="server_lab_path">path</string>
     <string name="server_lab_path_ws">ws path</string>
     <string name="server_lab_path_httpupgrade">httpupgrade path</string>
-    <string name="server_lab_path_splithttp">splithttp path</string>
+    <string name="server_lab_path_xhttp">xhttp path </string>
     <string name="server_lab_path_h2">h2 path</string>
     <string name="server_lab_path_quic">QUIC 加密金鑰</string>
     <string name="server_lab_path_kcp">kcp seed</string>
@@ -104,6 +104,7 @@
     <string name="server_lab_request_host6">Host(SNI)(可選)</string>
     <string name="toast_asset_copy_failed">失敗，請使用檔案總管</string>
     <string name="menu_item_add_file">新增檔案</string>
+    <string name="menu_item_scan_qrcode">掃描 QRcode</string>
     <string name="title_url">URL</string>
     <string name="menu_item_download_file">下載檔案</string>
     <string name="toast_action_not_allowed">禁止此項操作</string>
@@ -111,6 +112,8 @@
     <string name="server_lab_port_hop">跳躍連接埠(會覆蓋伺服器連接埠)</string>
     <string name="server_lab_port_hop_interval">連接埠跳躍間隔(秒)</string>
     <string name="server_lab_stream_pinsha256">SHA256憑證指紋</string>
+    <string name="server_lab_xhttp_mode">XHTTP 模式</string>
+    <string name="server_lab_xhttp_extra">XHTTP Extra 原始 JSON，格式： { XHTTPObject }</string>
 
     <!-- PerAppProxyActivity -->
     <string name="title_user_asset_add_url">新增資產網址</string>
@@ -262,9 +265,10 @@
     <string name="routing_settings_delete">清除</string>
     <string name="routing_settings_rule_title">路由規則設定</string>
     <string name="routing_settings_add_rule">新增規則</string>
-    <string name="routing_settings_import_rulesets">匯入預設規則集</string>
+    <string name="routing_settings_import_predefined_rulesets">匯入預先定義的規則集</string>
     <string name="routing_settings_import_rulesets_tip">將刪除現有的規則集，是否確定繼續？ </string>
     <string name="routing_settings_import_rulesets_from_clipboard">從剪貼簿匯入規則集</string>
+    <string name="routing_settings_import_rulesets_from_qrcode">從 QRcode 匯入規則集</string>
     <string name="routing_settings_export_rulesets_to_clipboard">匯出規則集至剪貼簿</string>
     <string name="routing_settings_locked">鎖定中，匯入預設時不刪除此規則</string>
 

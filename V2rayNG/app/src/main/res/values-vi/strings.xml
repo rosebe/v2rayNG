@@ -54,14 +54,14 @@
     <string name="server_lab_request_host_http">http host</string>
     <string name="server_lab_request_host_ws">ws host</string>
     <string name="server_lab_request_host_httpupgrade">httpupgrade host</string>
-    <string name="server_lab_request_host_splithttp">splithttp host</string>
+    <string name="server_lab_request_host_xhttp">xhttp host</string>
     <string name="server_lab_request_host_h2">h2 host</string>
     <string name="server_lab_request_host_quic">QUIC security</string>
     <string name="server_lab_request_host_grpc">gRPC Authority</string>
     <string name="server_lab_path">path</string>
     <string name="server_lab_path_ws">ws path</string>
     <string name="server_lab_path_httpupgrade">httpupgrade path</string>
-    <string name="server_lab_path_splithttp">splithttp path</string>
+    <string name="server_lab_path_xhttp">xhttp path </string>
     <string name="server_lab_path_h2">h2 path</string>
     <string name="server_lab_path_quic">QUIC key</string>
     <string name="server_lab_path_kcp">kcp seed</string>
@@ -104,6 +104,7 @@
     <string name="server_lab_request_host6">Host (SNI) (Không bắt buộc)</string>
     <string name="toast_asset_copy_failed">Không thể sao chép tệp tin, hãy dùng trình quản lý tệp!</string>
     <string name="menu_item_add_file">Thêm tệp</string>
+    <string name="menu_item_scan_qrcode">Quét mã QR</string>
     <string name="title_url">URL</string>
     <string name="menu_item_download_file">Tải xuống tệp tin</string>
     <string name="toast_action_not_allowed">Hành động này bị cấm!</string>
@@ -111,6 +112,8 @@
     <string name="server_lab_port_hop">Port Hopping</string>
     <string name="server_lab_port_hop_interval">Port Hopping Interval</string>
     <string name="server_lab_stream_pinsha256">pinSHA256</string>
+    <string name="server_lab_xhttp_mode">XHTTP Mode</string>
+    <string name="server_lab_xhttp_extra">XHTTP Extra raw JSON, format: { XHTTPObject }</string>
 
     <!-- PerAppProxyActivity -->
     <string name="title_user_asset_add_url">Thêm URL nội dung</string>
@@ -263,9 +266,10 @@
     <string name="routing_settings_delete">Xoá</string>
     <string name="routing_settings_rule_title">Routing Rule Settings</string>
     <string name="routing_settings_add_rule">Add rule</string>
-    <string name="routing_settings_import_rulesets">Import ruleset</string>
+    <string name="routing_settings_import_predefined_rulesets">Nhập các bộ quy tắc được xác định trước</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
     <string name="routing_settings_import_rulesets_from_clipboard">Import ruleset from clipboard</string>
+    <string name="routing_settings_import_rulesets_from_qrcode">Nhập bộ quy tắc từ QRcode</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
 

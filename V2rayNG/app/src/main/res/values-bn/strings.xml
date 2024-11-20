@@ -55,14 +55,14 @@
     <string name="server_lab_request_host_http">http হোস্ট</string>
     <string name="server_lab_request_host_ws">ws হোস্ট</string>
     <string name="server_lab_request_host_httpupgrade">httpupgrade হোস্ট</string>
-    <string name="server_lab_request_host_splithttp">splithttp হোস্ট</string>
+    <string name="server_lab_request_host_xhttp">xhttp হোস্ট</string>
     <string name="server_lab_request_host_h2">h2 হোস্ট</string>
     <string name="server_lab_request_host_quic">QUIC নিরাপত্তা</string>
     <string name="server_lab_request_host_grpc">gRPC কর্তৃপক্ষ</string>
     <string name="server_lab_path">পথ</string>
     <string name="server_lab_path_ws">ws পথ</string>
     <string name="server_lab_path_httpupgrade">httpupgrade পথ</string>
-    <string name="server_lab_path_splithttp">splithttp পথ</string>
+    <string name="server_lab_path_xhttp">xhttp পথ</string>
     <string name="server_lab_path_h2">h2 পথ</string>
     <string name="server_lab_path_quic">QUIC কী</string>
     <string name="server_lab_path_kcp">kcp বীজ</string>
@@ -107,6 +107,7 @@
     <string name="menu_item_add_asset">অ্যাসেট যোগ করুন</string>
     <string name="menu_item_add_file">ফাইল যোগ করুন</string>
     <string name="menu_item_add_url">URL যোগ করুন</string>
+    <string name="menu_item_scan_qrcode">QR কোড স্ক্যান করুন</string>
     <string name="title_url" translatable="false">URL</string>
     <string name="menu_item_download_file">ফাইল ডাউনলোড করুন</string>
     <string name="title_user_asset_add_url">অ্যাসেট URL যোগ করুন</string>
@@ -117,6 +118,8 @@
     <string name="server_lab_port_hop">Port Hopping</string>
     <string name="server_lab_port_hop_interval">Port Hopping Interval</string>
     <string name="server_lab_stream_pinsha256">pinSHA256</string>
+    <string name="server_lab_xhttp_mode">XHTTP Mode</string>
+    <string name="server_lab_xhttp_extra">XHTTP Extra raw JSON, format: { XHTTPObject }</string>
 
     <!-- PerAppProxyActivity -->
     <string name="msg_dialog_progress">লোড হচ্ছে</string>
@@ -262,9 +265,10 @@
     <string name="routing_settings_delete">মুছে ফেলুন</string>
     <string name="routing_settings_rule_title">Routing Rule Settings</string>
     <string name="routing_settings_add_rule">Add rule</string>
-    <string name="routing_settings_import_rulesets">Import ruleset</string>
+    <string name="routing_settings_import_predefined_rulesets">পূর্বনির্ধারিত নিয়মাবলী আমদানি করুন</string>
     <string name="routing_settings_import_rulesets_tip">Existing rulesets will be deleted, are you sure to continue?</string>
     <string name="routing_settings_import_rulesets_from_clipboard">Import ruleset from clipboard</string>
+    <string name="routing_settings_import_rulesets_from_qrcode">QRcode থেকে রুলসেট আমদানি করুন</string>
     <string name="routing_settings_export_rulesets_to_clipboard">Export ruleset to clipboard</string>
     <string name="routing_settings_locked">Locked, keep this rule when import presets</string>
 
