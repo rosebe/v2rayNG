@@ -182,17 +182,14 @@
     <string name="summary_pref_delay_test_url">URL</string>
 
     <string name="title_pref_proxy_sharing_enabled">اجازه اتصالات از طریق LAN</string>
-    <string name="summary_pref_proxy_sharing_enabled">دستگاه‌ های دیگر می‌توانند از طریق socks/http به پراکسی توسط نشانی آی‌پی شما متصل شوند، فقط در شبکه مورد اعتماد فعال می‌شوند تا از اتصال غیرمجاز جلوگیری کنند.</string>
+    <string name="summary_pref_proxy_sharing_enabled">سایر دستگاه‌ها می‌توانند با آدرس آی‌پی شما از طریق پراکسی محلی به پروکسی متصل شوند، فقط در شبکه قابل اعتماد فعال شود تا از اتصال غیرمجاز جلوگیری شود.</string>
     <string name="toast_warning_pref_proxysharing_short">اتصالات از طریق LAN را مجاز کنید، مطمئن شوید که در یک شبکه قابل اعتماد هستید</string>
 
     <string name="title_pref_allow_insecure">اعطای مجوز ناامن</string>
     <string name="summary_pref_allow_insecure">هنگام استفاده از TLS، به طور پیش‌ فرض مجوز ناامن فعال است.</string>
 
-    <string name="title_pref_socks_port">پورت پروکسی SOCKS5</string>
-    <string name="summary_pref_socks_port">پورت پروکسی SOCKS5</string>
-
-    <string name="title_pref_http_port">پورت پروکسی HTTP</string>
-    <string name="summary_pref_http_port">پورت پروکسی HTTP</string>
+    <string name="title_pref_socks_port">پورت پروکسی محلی</string>
+    <string name="summary_pref_socks_port">پورت پروکسی محلی</string>
 
     <string name="title_pref_local_dns_port">پورت DNS محلی</string>
     <string name="summary_pref_local_dns_port">پورت DNS محلی</string>
@@ -259,6 +256,10 @@
     <string name="filter_config_all">همه گروه‌های اشتراک</string>
     <string name="title_del_duplicate_config_count">حذف %d کانفیگ تکراری</string>
 
+    <string name="title_del_config_count">حذف %d کانفیگ</string>
+    <string name="title_import_config_count">وارد کردن %d کانفیگ</string>
+    <string name="title_export_config_count">صادر کردن %d کانفیگ</string>
+    <string name="title_update_config_count">آپدیت کردن %d کانفیگ</string>
     <string name="tasker_start_service">شروع خدمات</string>
     <string name="tasker_setting_confirm">تایید</string>
 
@@ -286,6 +287,7 @@
 
     <string name="connection_test_pending">اتصال را بررسی کنید</string>
     <string name="connection_test_testing">در حال آزمایش...</string>
+    <string name="connection_test_testing_count">تست کردن %d کانفیگ…</string>
     <string name="connection_test_available">موفقیت: اتصال HTTP %dms طول کشید</string>
     <string name="connection_test_error">اتصال به اینترنت شناسایی نشد: %s</string>
     <string name="connection_test_fail">اینترنت در دسترس نیست</string>
