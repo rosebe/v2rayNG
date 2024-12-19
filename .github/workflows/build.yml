@@ -28,7 +28,7 @@ jobs:
       uses: actions/checkout@v4.2.2
       
     - name: Setup Java
-      uses: actions/setup-java@v4.5.0
+      uses: actions/setup-java@v4.6.0
       with:
         distribution: 'temurin'
         #java-version: '17'
@@ -41,7 +41,7 @@ jobs:
         curl -L "https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go.sum" -o go.sum
 
     - name: Setup Golang
-      uses: actions/setup-go@v5.1.0
+      uses: actions/setup-go@v5.2.0
       with:
         go-version: '1.22.4'
         check-latest: false
@@ -65,7 +65,7 @@ jobs:
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     - name: Setup Android environment SDK
-      uses: android-actions/setup-android@v3.2.1
+      uses: android-actions/setup-android@v3.2.2
   
     #- name: Setup VpnService.kt patch
       #run: |
@@ -96,7 +96,7 @@ jobs:
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
 
     - name: Upload go.mod
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v4.5.0
       if: ${{  success() }}
       with:
         name: go.mod
@@ -104,7 +104,7 @@ jobs:
           ${{ github.workspace }}/build/AndroidLibXrayLite/go.mod
 
     - name: Upload go.sum
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v4.5.0
       if: ${{  success() }}
       with:
         name: go.sum
@@ -158,10 +158,10 @@ jobs:
         keyPassword: ${{ env.KEYPASSWORD }}
         keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
         signingKey: ${{ env.SIGNINGKEYBASE64 }}
-        buildToolsVersion: 33.0.2   
+        buildToolsVersion: 35.0.0   
     
     - name: Upload APK
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v4.5.0
       if: ${{  success() }}
       with:
         name: apk
@@ -169,7 +169,7 @@ jobs:
           ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*_arm64-v8a-signed.apk
           
     - name: Upload binaries [ arm64-v8a*signed.apk ] to release
-      uses: svenstaro/upload-release-action@fe688929210446b58cd7990c2352d8c652c822a3
+      uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
       #if: github.event_name == 'release'
       with:
         repo_token: ${{ github.token }}          
@@ -191,7 +191,7 @@ jobs:
         file_glob: true
 
     - name: Upload binaries [ armeabi-v7a*signed.apk ] to release
-      uses: svenstaro/upload-release-action@fe688929210446b58cd7990c2352d8c652c822a3
+      uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
       #if: github.event_name == 'release'
       with:
         repo_token: ${{ github.token }}          
@@ -213,7 +213,7 @@ jobs:
         file_glob: true
     
     - name: Upload binaries [ x86*signed.apk and x86_64*signed.apk ] to release
-      uses: svenstaro/upload-release-action@fe688929210446b58cd7990c2352d8c652c822a3
+      uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
       #if: github.event_name == 'release'
       with:
         repo_token: ${{ github.token }}          
@@ -235,7 +235,7 @@ jobs:
         file_glob: true
     
     - name: Upload binaries [ universal*signed.apk ] to release
-      uses: svenstaro/upload-release-action@fe688929210446b58cd7990c2352d8c652c822a3
+      uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
       #if: github.event_name == 'release'
       with:
         repo_token: ${{ github.token }}          
