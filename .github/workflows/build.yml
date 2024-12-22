@@ -149,6 +149,13 @@ jobs:
     - name: List APK files
       run: |
         find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
+
+    - name: Decode Keystore
+      uses: timheuer/base64-to-file@v1
+      id: android_keystore
+      with:
+        fileName: "android_keystore.jks"
+        encodedString: ${{ secrets.SIGNINGKEYBASE64 }}
     
     - name: Sign APK files
       uses: ilharp/sign-android-release@nightly
