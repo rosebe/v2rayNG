@@ -154,7 +154,7 @@ jobs:
       uses: timheuer/base64-to-file@v1
       id: android_keystore
       with:
-        fileName: "android_keystore.jks"
+        fileName: "key.jks"
         encodedString: ${{ secrets.SIGNINGKEYBASE64 }}
     
     - name: Sign APK files
