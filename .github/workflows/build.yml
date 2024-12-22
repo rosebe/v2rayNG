@@ -134,12 +134,12 @@ jobs:
           echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}') build on ${{ env.BUILD_TIME }}" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
 
-    - name: Decode Keystore
-      uses: timheuer/base64-to-file@v1
-      id: android_keystore
-      with:
-        fileName: "android_keystore.jks"
-        encodedString: ${{ secrets.SIGNINGKEYBASE64 }}                
+    #- name: Decode Keystore
+      #uses: timheuer/base64-to-file@v1
+      #id: android_keystore
+      #with:
+        #fileName: "android_keystore.jks"
+        #encodedString: ${{ secrets.SIGNINGKEYBASE64 }}                
     
     - name: Build APK
       run: |
@@ -149,26 +149,27 @@ jobs:
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         chmod 755 gradlew
         #./gradlew build --no-daemon
-        #./gradlew assembleRelease --no-daemon
+        ./gradlew assembleRelease --no-daemon
         #./gradlew assembleRelease
-        ./gradlew assembleRelease --no-daemon -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
-                                  -Pandroid.injected.signing.store.password=${{ secrets.KEYSTOREPASSWORD }} \
-                                  -Pandroid.injected.signing.key.alias=${{ secrets.ALIAS }} \
-                                  -Pandroid.injected.signing.key.password=${{ secrets.KEYPASSWORD }}
+        #./gradlew assembleRelease --no-daemon \
+        #                          -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
+        #                          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTOREPASSWORD }} \
+        #                          -Pandroid.injected.signing.key.alias=${{ secrets.ALIAS }} \
+        #                          -Pandroid.injected.signing.key.password=${{ secrets.KEYPASSWORD }}
            
     - name: List APK files
       run: |
         find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
 
-    #- name: Sign APK files
-      #uses: ilharp/sign-android-release@nightly
-      #with:
-        #releaseDir: V2rayNG/app/build/outputs/apk/release/
-        #keyAlias: ${{ env.ALIAS }}
-        #keyPassword: ${{ env.KEYPASSWORD }}
-        #keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
-        #signingKey: ${{ env.SIGNINGKEYBASE64 }}
-        #buildToolsVersion: 35.0.0   
+    - name: Sign APK files
+      uses: ilharp/sign-android-release@nightly
+      with:
+        releaseDir: V2rayNG/app/build/outputs/apk/playstore/release/
+        keyAlias: ${{ env.ALIAS }}
+        keyPassword: ${{ env.KEYPASSWORD }}
+        keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
+        signingKey: ${{ env.SIGNINGKEYBASE64 }}
+        buildToolsVersion: 35.0.0   
     
     - name: Upload APK
       uses: actions/upload-artifact@v4.5.0
@@ -176,7 +177,7 @@ jobs:
       with:
         name: apk
         path: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*_arm64-v8a*.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*_arm64-v8a-signed.apk
           
     - name: Upload binaries [ arm64-v8a*signed.apk ] to release
       uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
@@ -187,7 +188,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*arm64-v8a*.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*arm64-v8a*signed.apk
           
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
@@ -209,7 +210,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*armeabi-v7a*.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*armeabi-v7a*signed.apk
                   
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
@@ -231,7 +232,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*x86*.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*x86*signed.apk
                   
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
@@ -253,7 +254,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*universal*.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*universal*signed.apk
         
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
