@@ -125,7 +125,7 @@ jobs:
     
     - name: Build dependencies
       run: |
-        mkdir ${{ github.workspace }}/build
+        #mkdir ${{ github.workspace }}/build
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
