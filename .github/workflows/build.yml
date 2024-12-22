@@ -177,7 +177,7 @@ jobs:
       with:
         name: apk
         path: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*_arm64-v8a-signed.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release/v2rayNG_*_arm64-v8a-signed.apk
           
     - name: Upload binaries [ arm64-v8a*signed.apk ] to release
       uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
@@ -188,7 +188,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*arm64-v8a*signed.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release/v2rayNG_*arm64-v8a*signed.apk
           
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
@@ -210,7 +210,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/v2rayNG_*armeabi-v7a*signed.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/playstore/v2rayNG_*armeabi-v7a*signed.apk
                   
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
@@ -232,7 +232,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*x86*signed.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release/*x86*signed.apk
                   
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
@@ -254,7 +254,7 @@ jobs:
         release_name: ${{ env.RELEASE_NAME }}
         #asset_name: ${{ env.ASSET_NAME }}
         file: |
-          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*universal*signed.apk
+          ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release/*universal*signed.apk
         
         body: "### Happy play for v2rayNG_v${{ env.NG_VERSION }} with alpn_h2 
         
