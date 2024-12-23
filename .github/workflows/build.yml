@@ -45,7 +45,7 @@ jobs:
         path: ${{ github.workspace }}/build/AndroidLibV2rayLite/libs
         key: libtun2socks-${{ runner.os }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/refs/heads/master') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/badvpn/HEAD') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/libancillary/HEAD') }}
 
-    - name: Setup Android NDK
+    - name: Setup Android environment NDK
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       uses: nttld/setup-ndk@v1
       id: setup-ndk
@@ -69,22 +69,15 @@ jobs:
       with:
         path: ${{ github.workspace }}/build/AndroidLibV2rayLite/libs
         key: libtun2socks-${{ runner.os }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/refs/heads/master') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/badvpn/HEAD') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/libancillary/HEAD') }}
-
+        
     - name: Copy libtun2socks
       run: |
         cp -r ${{ github.workspace }}/build/AndroidLibV2rayLite/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
 
-
+    - name: List libtun2socks files
+      run: |
+        find ${{ github.workspace }}/build/AndroidLibV2rayLite/libs/ -type f -exec ls -l {} \;
     
-    - name: Setup Java
-      uses: actions/setup-java@v4.6.0
-      with:
-        distribution: 'temurin'
-        #java-version: '17'
-        java-version: '21'
-        cache: 'gradle'
-    #- run: ./gradlew build --no-daemon
-        
     - name: Get go.sum
       run: |
         curl -L "https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go.sum" -o go.sum
@@ -103,7 +96,7 @@ jobs:
         cd "$(go env GOROOT)"
         curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
  
-    - name: Set Golang-version 
+    - name: Get Golang-version 
       run: |
         echo "GOLANG-VERSION=$(go version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')" >> $GITHUB_ENV
     
@@ -113,17 +106,12 @@ jobs:
         go install golang.org/x/mobile/cmd/gomobile@latest
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-
-    - name: Setup Android environment SDK
-      uses: android-actions/setup-android@v3.2.2
-
-    
-    - name: Set Build Time 
+   - name: Set Build Time 
       run: |
         echo "BUILD_TIME=$(date +%Y_%m_%d-%H:%M:%S)" >> $GITHUB_ENV
         
     
-    - name: Build dependencies
+    - name: Build libv2ray.aar (libXray)
       run: |
         mkdir -p ${{ github.workspace }}/build
         cd ${{ github.workspace }}/build
@@ -138,6 +126,10 @@ jobs:
         go mod tidy -v
         gomobile bind -a -v -androidapi 21 -ldflags='-s -w' ./
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
+    
+    - name: List libv2ray.aar (libXray) files
+      run: |
+        find ${{ github.workspace }}/build/AndroidLibXrayLite/ -type f -exec ls -l {} \; | grep *.aar
 
     - name: Upload go.mod
       uses: actions/upload-artifact@v4.5.0
@@ -178,6 +170,22 @@ jobs:
           echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}') build on ${{ env.BUILD_TIME }}" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
     
+    - name: List Build dependencies files
+      run: |
+        find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec du -h {} \;
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4.6.0
+      with:
+        distribution: 'temurin'
+        #java-version: '17'
+        java-version: '21'
+        cache: 'gradle'
+    #- run: ./gradlew build --no-daemon
+    
+    - name: Setup Android environment SDK
+      uses: android-actions/setup-android@v3.2.2
+
     #- name: Decode Keystore
       #uses: timheuer/base64-to-file@v1
       #id: android_keystore
@@ -195,6 +203,7 @@ jobs:
         #./gradlew build --no-daemon
         ./gradlew assembleRelease --no-daemon
         #./gradlew assembleRelease
+        #./gradlew licenseFdroidReleaseReport --no-daemon
         #./gradlew assembleRelease --no-daemon \
         #                          -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
         #                          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTOREPASSWORD }} \
@@ -207,8 +216,8 @@ jobs:
       with:
         name: gradle_problems_report
         path: |
-          ${{ github.workspace }}/V2rayNG/build/reports/problems/problems-report.html
-                 
+          {{ github.workspace }}/V2rayNG/build/reports/problems/problems-report.html
+      
     - name: List APK files
       run: |
         find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
