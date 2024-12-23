@@ -129,8 +129,8 @@ jobs:
     
     - name: List libv2ray.aar (libXray) files
       run: |
-        find ${{ github.workspace }}/build/AndroidLibXrayLite/ -type f -exec ls -l {} \; | grep *.aar
-
+        find ${{ github.workspace }}/build/AndroidLibXrayLite/ -type f -exec ls -l {} \; | grep aar
+        
     - name: Upload go.mod
       uses: actions/upload-artifact@v4.5.0
       if: ${{  success() }}
