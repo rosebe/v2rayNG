@@ -172,8 +172,8 @@ jobs:
     
     - name: List Build dependencies files
       run: |
-        find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec du -h {} \;
-        
+        #find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec du -h {} \;
+        find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec ls -l {} \;        
     - name: Setup Java
       uses: actions/setup-java@v4.6.0
       with:
