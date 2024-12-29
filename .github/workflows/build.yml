@@ -138,11 +138,11 @@ jobs:
         cd AndroidLibXrayLite
         sed -i "s/github.com\/sagernet\/gomobile v0.1.4/golang.org\/x\/mobile v0.0.0-20241213221354-a87c1cf6cf46/" go.mod
         sed -i "s/mobasset \"github.com\/sagernet\/gomobile\/asset\"/mobasset \"golang.org\/x\/mobile\/asset\"/" libv2ray_main.go
-        #go mod tidy
         sed -i "s/go 1.23.4/go 1.22.4/" go.mod
         sed -i "s/github.com\/xtls\/reality v0.0.0-20240909153216-e26ae2305463/github.com\/xtls\/reality v0.0.0-20240712055506-48f0b2d5ed6d/" go.mod
         sed -i "s/github.com\/rosebe\/xray-core 994e87cbe103/github.com\/rosebe\/xray-core ${{ github.event.inputs.XRAY_CORE_VERSION }}/" go.mod
         sed -i "s/v2core.Version())/v2core.Version() + \" Rosebe_alpn_h2 @${{ github.event.inputs.XRAY_CORE_VERSION }}, build on ${{ env.BUILD_TIME }}, by Golang ${{ env.GOLANG-VERSION }}. \")/" libv2ray_main.go                                                                                                                   
+        go mod tidy
         go get github.com/rosebe/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
         #gomobile clean
         gomobile init
