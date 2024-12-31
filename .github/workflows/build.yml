@@ -136,6 +136,9 @@ jobs:
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
+        mkdir -p assets data
+        bash gen_assets.sh download
+        cp -v data/*.dat assets/
         sed -i "s/github.com\/sagernet\/gomobile v0.1.4/golang.org\/x\/mobile v0.0.0-20241213221354-a87c1cf6cf46/" go.mod
         sed -i "s/mobasset \"github.com\/sagernet\/gomobile\/asset\"/mobasset \"golang.org\/x\/mobile\/asset\"/" libv2ray_main.go
         sed -i "s/go 1.23.4/go 1.22.4/" go.mod
