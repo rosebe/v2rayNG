@@ -54,7 +54,8 @@ jobs:
         key: libtun2socks-${{ runner.os }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/refs/heads/master') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/badvpn/HEAD') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/libancillary/HEAD') }}
 
     - name: Setup Android environment NDK
-      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      #if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      #if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'                                                                                                                             
       uses: nttld/setup-ndk@v1
       id: setup-ndk
       # Same version as https://gitlab.com/fdroid/fdroiddata/metadata/com.v2ray.ang.yml
@@ -65,7 +66,8 @@ jobs:
         local-cache: true
     
     - name: Restore Android Symlinks
-      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      #if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      #if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'                                                                                                                             
       run: |
         directory="${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
         find "$directory" -type l | while read link; do
@@ -83,6 +85,7 @@ jobs:
         tar -xvzf libtun2socks.so.tgz
         cp -r libs/* ${{ github.workspace }}/V2rayNG/app/libs/
       env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}                                                         
         NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
     - name: Save libtun2socks
@@ -199,6 +202,14 @@ jobs:
           echo "RELEASE_NAME=v2rayNG_v$(cat ./build.gradle.tmp | grep versionName | grep -v versionNameSuffix |grep -v variant.versionName | awk '{print $3}') build on ${{ env.BUILD_TIME }}" >> $GITHUB_ENV
           rm -rf ./build.gradle.tmp
     
+    #- name: Download libv2ray
+      #uses: robinraju/release-downloader@v1
+      #with:
+        #repository: '2dust/AndroidLibXrayLite'
+        #latest: true
+        #fileName: 'libv2ray.aar'
+        #out-file-path: V2rayNG/app/libs/
+        
     - name: List Build dependencies files
       run: |
         find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec du -h {} \;
@@ -239,6 +250,8 @@ jobs:
         #                          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTOREPASSWORD }} \
         #                          -Pandroid.injected.signing.key.alias=${{ secrets.ALIAS }} \
         #                          -Pandroid.injected.signing.key.password=${{ secrets.KEYPASSWORD }}
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
            
     - name: Upload gradle_problems_report
       uses: actions/upload-artifact@v4.5.0
