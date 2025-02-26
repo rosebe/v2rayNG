@@ -56,7 +56,8 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/libs
-        key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/refs/heads/new') }}-${{ hashFiles('.git/modules/libancillary/refs/heads/shadowsocks-android') }}
+        #key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/refs/heads/new') }}-${{ hashFiles('.git/modules/libancillary/refs/heads/shadowsocks-android') }}
+        key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
     
     - name: Setup Android environment NDK
       #if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
@@ -98,7 +99,8 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/libs
-        key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/refs/heads/new') }}-${{ hashFiles('.git/modules/libancillary/refs/heads/shadowsocks-android') }}
+        #key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/refs/heads/new') }}-${{ hashFiles('.git/modules/libancillary/refs/heads/shadowsocks-android') }}
+        key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
         
     - name: Copy libtun2socks
       run: |
