@@ -300,6 +300,7 @@ jobs:
         sed -i "s/gradle-8.12-bin.zip/gradle-8.14-milestone-3-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         #sed -i "s/gradle-8.12-bin.zip/gradle-8.13-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}/V2rayNG
+        curl https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch | patch --verbose -p 1
         #chmod 777 *
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         chmod 755 gradlew
