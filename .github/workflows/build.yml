@@ -77,11 +77,10 @@ jobs:
       run: |
         cd ${{ github.workspace }}
         #git submodule update --init --recursive
-        bash compile-tun2socks.sh
-                                                                      
-      env:
-        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-        NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        bash compile-tun2socks.sh                                                     
+      #env:
+        #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        #NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
     - name: Save libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
