@@ -1,28 +1,32 @@
-package com.v2ray.ang.util
+package com.v2ray.ang.handler
 
 import android.content.Context
 import android.os.SystemClock
 import android.text.TextUtils
 import android.util.Log
 import com.v2ray.ang.AppConfig
-import com.v2ray.ang.AppConfig.LOOPBACK
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.responseLength
+import com.v2ray.ang.util.HttpUtil
 import kotlinx.coroutines.isActive
 import libv2ray.Libv2ray
 import java.io.IOException
-import java.net.HttpURLConnection
 import java.net.InetSocketAddress
-import java.net.Proxy
 import java.net.Socket
-import java.net.URL
 import java.net.UnknownHostException
 import kotlin.coroutines.coroutineContext
 
-object SpeedtestUtil {
+object SpeedtestManager {
 
     private val tcpTestingSockets = ArrayList<Socket?>()
 
+    /**
+     * Measures the TCP connection time to a given URL and port.
+     *
+     * @param url The URL to connect to.
+     * @param port The port to connect to.
+     * @return The connection time in milliseconds, or -1 if the connection failed.
+     */
     suspend fun tcping(url: String, port: Int): Long {
         var time = -1L
         for (k in 0 until 2) {
@@ -37,15 +41,27 @@ object SpeedtestUtil {
         return time
     }
 
+    /**
+     * Measures the real ping time using the V2Ray library.
+     *
+     * @param config The configuration string for the V2Ray library.
+     * @return The ping time in milliseconds, or -1 if the ping failed.
+     */
     fun realPing(config: String): Long {
         return try {
-            Libv2ray.measureOutboundDelay(config, Utils.getDelayTestUrl())
+            Libv2ray.measureOutboundDelay(config, SettingsManager.getDelayTestUrl())
         } catch (e: Exception) {
             Log.d(AppConfig.ANG_PACKAGE, "realPing: $e")
             -1L
         }
     }
 
+    /**
+     * Measures the ping time to a given URL using the system ping command.
+     *
+     * @param url The URL to ping.
+     * @return The ping time in milliseconds as a string, or "-1ms" if the ping failed.
+     */
     fun ping(url: String): String {
         try {
             val command = "/system/bin/ping -c 3 $url"
@@ -65,6 +81,13 @@ object SpeedtestUtil {
         return "-1ms"
     }
 
+    /**
+     * Measures the time taken to establish a TCP connection to a given URL and port.
+     *
+     * @param url The URL to connect to.
+     * @param port The port to connect to.
+     * @return The connection time in milliseconds, or -1 if the connection failed.
+     */
     fun socketConnectTime(url: String, port: Int): Long {
         try {
             val socket = Socket()
@@ -89,6 +112,9 @@ object SpeedtestUtil {
         return -1
     }
 
+    /**
+     * Closes all TCP sockets that are currently being tested.
+     */
     fun closeAllTcpSockets() {
         synchronized(this) {
             tcpTestingSockets.forEach {
@@ -98,26 +124,19 @@ object SpeedtestUtil {
         }
     }
 
+    /**
+     * Tests the connection to a given URL and port.
+     *
+     * @param context The Context in which the test is running.
+     * @param port The port to connect to.
+     * @return A pair containing the elapsed time in milliseconds and the result message.
+     */
     fun testConnection(context: Context, port: Int): Pair<Long, String> {
         var result: String
         var elapsed = -1L
-        var conn: HttpURLConnection? = null
 
+        val conn = HttpUtil.createProxyConnection(SettingsManager.getDelayTestUrl(), port, 15000, 15000) ?: return Pair(elapsed, "")
         try {
-            val url = URL(Utils.getDelayTestUrl())
-
-            conn = url.openConnection(
-                Proxy(
-                    Proxy.Type.HTTP,
-                    InetSocketAddress(LOOPBACK, port)
-                )
-            ) as HttpURLConnection
-            conn.connectTimeout = 30000
-            conn.readTimeout = 30000
-            conn.setRequestProperty("Connection", "close")
-            conn.instanceFollowRedirects = false
-            conn.useCaches = false
-
             val start = SystemClock.elapsedRealtime()
             val code = conn.responseCode
             elapsed = SystemClock.elapsedRealtime() - start
@@ -133,11 +152,9 @@ object SpeedtestUtil {
                 )
             }
         } catch (e: IOException) {
-            // network exception
             Log.d(AppConfig.ANG_PACKAGE, "testConnection IOException: " + Log.getStackTraceString(e))
             result = context.getString(R.string.connection_test_error, e.message)
         } catch (e: Exception) {
-            // library exception, eg sumsung
             Log.d(AppConfig.ANG_PACKAGE, "testConnection Exception: " + Log.getStackTraceString(e))
             result = context.getString(R.string.connection_test_error, e.message)
         } finally {
@@ -147,6 +164,11 @@ object SpeedtestUtil {
         return Pair(elapsed, result)
     }
 
+    /**
+     * Gets the version of the V2Ray library.
+     *
+     * @return The version of the V2Ray library.
+     */
     fun getLibVersion(): String {
         return Libv2ray.checkVersionX()
     }

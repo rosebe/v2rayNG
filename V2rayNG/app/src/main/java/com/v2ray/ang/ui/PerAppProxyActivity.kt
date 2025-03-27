@@ -5,11 +5,8 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.R
@@ -18,12 +15,13 @@ import com.v2ray.ang.dto.AppInfo
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.v2RayApplication
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.AppManagerUtil
+import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.Utils
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.Collator
 
 class PerAppProxyActivity : BaseActivity() {
@@ -38,98 +36,43 @@ class PerAppProxyActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        val dividerItemDecoration = DividerItemDecoration(this, LinearLayoutManager.VERTICAL)
-        binding.recyclerView.addItemDecoration(dividerItemDecoration)
+        title = getString(R.string.per_app_proxy_settings)
 
-        val blacklist = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_PER_APP_PROXY_SET)
+        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
 
-        AppManagerUtil.rxLoadNetworkAppList(this)
-            .subscribeOn(Schedulers.io())
-            .map {
-                if (blacklist != null) {
-                    it.forEach { one ->
-                        if (blacklist.contains(one.packageName)) {
-                            one.isSelected = 1
-                        } else {
-                            one.isSelected = 0
+        lifecycleScope.launch {
+            try {
+                binding.pbWaiting.show()
+                val blacklist = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_PER_APP_PROXY_SET)
+                val apps = withContext(Dispatchers.IO) {
+                    val appsList = AppManagerUtil.loadNetworkAppList(this@PerAppProxyActivity)
+
+                    if (blacklist != null) {
+                        appsList.forEach { app ->
+                            app.isSelected = if (blacklist.contains(app.packageName)) 1 else 0
                         }
-                    }
-                    val comparator = Comparator<AppInfo> { p1, p2 ->
-                        when {
-                            p1.isSelected > p2.isSelected -> -1
-                            p1.isSelected == p2.isSelected -> 0
-                            else -> 1
-                        }
-                    }
-                    it.sortedWith(comparator)
-                } else {
-                    val comparator = object : Comparator<AppInfo> {
+                        appsList.sortedWith(Comparator { p1, p2 ->
+                            when {
+                                p1.isSelected > p2.isSelected -> -1
+                                p1.isSelected == p2.isSelected -> 0
+                                else -> 1
+                            }
+                        })
+                    } else {
                         val collator = Collator.getInstance()
-                        override fun compare(o1: AppInfo, o2: AppInfo) = collator.compare(o1.appName, o2.appName)
+                        appsList.sortedWith(compareBy(collator) { it.appName })
                     }
-                    it.sortedWith(comparator)
                 }
-            }
-//                .map {
-//                    val comparator = object : Comparator<AppInfo> {
-//                        val collator = Collator.getInstance()
-//                        override fun compare(o1: AppInfo, o2: AppInfo) = collator.compare(o1.appName, o2.appName)
-//                    }
-//                    it.sortedWith(comparator)
-//                }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                appsAll = it
-                adapter = PerAppProxyAdapter(this, it, blacklist)
+
+                appsAll = apps
+                adapter = PerAppProxyAdapter(this@PerAppProxyActivity, apps, blacklist)
                 binding.recyclerView.adapter = adapter
-                binding.pbWaiting.visibility = View.GONE
+                binding.pbWaiting.hide()
+            } catch (e: Exception) {
+                binding.pbWaiting.hide()
+                Log.e(ANG_PACKAGE, "Error loading apps", e)
             }
-        /***
-        recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-        var dst = 0
-        val threshold = resources.getDimensionPixelSize(R.dimen.bypass_list_header_height) * 2
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-        dst += dy
-        if (dst > threshold) {
-        header_view.hide()
-        dst = 0
-        } else if (dst < -20) {
-        header_view.show()
-        dst = 0
         }
-        }
-
-        var hiding = false
-        fun View.hide() {
-        val target = -height.toFloat()
-        if (hiding || translationY == target) return
-        animate()
-        .translationY(target)
-        .setInterpolator(AccelerateInterpolator(2F))
-        .setListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator?) {
-        hiding = false
-        }
-        })
-        hiding = true
-        }
-
-        var showing = false
-        fun View.show() {
-        val target = 0f
-        if (showing || translationY == target) return
-        animate()
-        .translationY(target)
-        .setInterpolator(DecelerateInterpolator(2F))
-        .setListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator?) {
-        showing = false
-        }
-        })
-        showing = true
-        }
-        })
-         ***/
 
         binding.switchPerAppProxy.setOnCheckedChangeListener { _, isChecked ->
             MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, isChecked)
@@ -140,36 +83,6 @@ class PerAppProxyActivity : BaseActivity() {
             MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, isChecked)
         }
         binding.switchBypassApps.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS, false)
-
-        /***
-        et_search.setOnEditorActionListener { v, actionId, event ->
-        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-        //hide
-        var imm: InputMethodManager = v.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS)
-
-        val key = v.text.toString().toUpperCase()
-        val apps = ArrayList<AppInfo>()
-        if (TextUtils.isEmpty(key)) {
-        appsAll?.forEach {
-        apps.add(it)
-        }
-        } else {
-        appsAll?.forEach {
-        if (it.appName.toUpperCase().indexOf(key) >= 0) {
-        apps.add(it)
-        }
-        }
-        }
-        adapter = PerAppProxyAdapter(this, apps, adapter?.blacklist)
-        recycler_view.adapter = adapter
-        adapter?.notifyDataSetChanged()
-        true
-        } else {
-        false
-        }
-        }
-         ***/
     }
 
     override fun onPause() {
@@ -237,13 +150,20 @@ class PerAppProxyActivity : BaseActivity() {
 
     private fun selectProxyApp() {
         toast(R.string.msg_downloading_content)
+        binding.pbWaiting.show()
+
         val url = AppConfig.androidpackagenamelistUrl
         lifecycleScope.launch(Dispatchers.IO) {
-            val content = Utils.getUrlContext(url, 5000)
+            var content = HttpUtil.getUrlContent(url, 5000)
+            if (content.isNullOrEmpty()) {
+                val httpPort = SettingsManager.getHttpPort()
+                content = HttpUtil.getUrlContent(url, 5000, httpPort) ?: ""
+            }
             launch(Dispatchers.Main) {
                 Log.d(ANG_PACKAGE, content)
                 selectProxyApp(content, true)
                 toast(R.string.toast_success)
+                binding.pbWaiting.hide()
             }
         }
     }

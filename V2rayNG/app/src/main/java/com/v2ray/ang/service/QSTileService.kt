@@ -1,6 +1,5 @@
 package com.v2ray.ang.service
 
-import android.annotation.TargetApi
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,6 +8,7 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -16,9 +16,13 @@ import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.util.Utils
 import java.lang.ref.SoftReference
 
-@TargetApi(Build.VERSION_CODES.N)
+@RequiresApi(Build.VERSION_CODES.N)
 class QSTileService : TileService() {
 
+    /**
+     * Sets the state of the tile.
+     * @param state The state to set.
+     */
     fun setState(state: Int) {
         if (state == Tile.STATE_INACTIVE) {
             qsTile?.state = Tile.STATE_INACTIVE
@@ -26,7 +30,7 @@ class QSTileService : TileService() {
             qsTile?.icon = Icon.createWithResource(applicationContext, R.drawable.ic_stat_name)
         } else if (state == Tile.STATE_ACTIVE) {
             qsTile?.state = Tile.STATE_ACTIVE
-            qsTile?.label = V2RayServiceManager.currentConfig?.remarks
+            qsTile?.label = V2RayServiceManager.getRunningServerName()
             qsTile?.icon = Icon.createWithResource(applicationContext, R.drawable.ic_stat_name)
         }
 
@@ -37,7 +41,6 @@ class QSTileService : TileService() {
      * Refer to the official documentation for [registerReceiver](https://developer.android.com/reference/androidx/core/content/ContextCompat#registerReceiver(android.content.Context,android.content.BroadcastReceiver,android.content.IntentFilter,int):
      * `registerReceiver(Context, BroadcastReceiver, IntentFilter, int)`.
      */
-
     override fun onStartListening() {
         super.onStartListening()
 
@@ -48,6 +51,9 @@ class QSTileService : TileService() {
         MessageUtil.sendMsg2Service(this, AppConfig.MSG_REGISTER_CLIENT, "")
     }
 
+    /**
+     * Called when the tile stops listening.
+     */
     override fun onStopListening() {
         super.onStopListening()
 
@@ -60,15 +66,18 @@ class QSTileService : TileService() {
 
     }
 
+    /**
+     * Called when the tile is clicked.
+     */
     override fun onClick() {
         super.onClick()
         when (qsTile.state) {
             Tile.STATE_INACTIVE -> {
-                Utils.startVServiceFromToggle(this)
+                V2RayServiceManager.startVServiceFromToggle(this)
             }
 
             Tile.STATE_ACTIVE -> {
-                Utils.stopVService(this)
+                V2RayServiceManager.stopVService(this)
             }
         }
     }

@@ -53,6 +53,13 @@ import com.v2ray.ang.util.Utils
 
 object V2rayConfigManager {
 
+    /**
+     * Retrieves the V2ray configuration for the given GUID.
+     *
+     * @param context The context of the caller.
+     * @param guid The unique identifier for the V2ray configuration.
+     * @return A ConfigResult object containing the configuration details or indicating failure.
+     */
     fun getV2rayConfig(context: Context, guid: String): ConfigResult {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
@@ -72,6 +79,13 @@ object V2rayConfigManager {
         }
     }
 
+    /**
+     * Retrieves the non-custom V2ray configuration.
+     *
+     * @param context The context in which the function is called.
+     * @param config The profile item containing the configuration details.
+     * @return A ConfigResult object containing the result of the configuration retrieval.
+     */
     private fun getV2rayNonCustomConfig(context: Context, config: ProfileItem): ConfigResult {
         val result = ConfigResult(false)
 
@@ -83,7 +97,6 @@ object V2rayConfigManager {
             }
         }
 
-        //取得默认配置
         val assets = Utils.readTextFromAssets(context, "v2ray_config.json")
         if (TextUtils.isEmpty(assets)) {
             return result
@@ -270,8 +283,8 @@ object V2rayConfigManager {
                 )
             }
 
-            // DNS inbound对象
-            val remoteDns = Utils.getRemoteDnsServers()
+            // DNS inbound
+            val remoteDns = SettingsManager.getRemoteDnsServers()
             if (v2rayConfig.inbounds.none { e -> e.protocol == "dokodemo-door" && e.tag == "dns-in" }) {
                 val dnsInboundSettings = V2rayConfig.InboundBean.InSettingsBean(
                     address = if (Utils.isPureIpAddress(remoteDns.first())) remoteDns.first() else AppConfig.DNS_PROXY,
@@ -295,7 +308,7 @@ object V2rayConfigManager {
                 )
             }
 
-            // DNS outbound对象
+            // DNS outbound
             if (v2rayConfig.outbounds.none { e -> e.protocol == "dns" && e.tag == "dns-out" }) {
                 v2rayConfig.outbounds.add(
                     V2rayConfig.OutboundBean(
@@ -329,7 +342,7 @@ object V2rayConfigManager {
             val servers = ArrayList<Any>()
 
             //remote Dns
-            val remoteDns = Utils.getRemoteDnsServers()
+            val remoteDns = SettingsManager.getRemoteDnsServers()
             val proxyDomain = userRule2Domain(TAG_PROXY)
             remoteDns.forEach {
                 servers.add(it)
@@ -344,7 +357,7 @@ object V2rayConfigManager {
             }
 
             // domestic DNS
-            val domesticDns = Utils.getDomesticDnsServers()
+            val domesticDns = SettingsManager.getDomesticDnsServers()
             val directDomain = userRule2Domain(TAG_DIRECT)
             val isCnRoutingMode = directDomain.contains(GEOSITE_CN)
             val geoipCn = arrayListOf(GEOIP_CN)
@@ -402,7 +415,7 @@ object V2rayConfigManager {
             hosts[DNS_YANDEX_DOMAIN] = DNS_YANDEX_ADDRESSES
 
 
-            // DNS dns对象
+            // DNS dns
             v2rayConfig.dns = V2rayConfig.DnsBean(
                 servers = servers,
                 hosts = hosts
@@ -630,6 +643,12 @@ object V2rayConfigManager {
         return returnPair
     }
 
+    /**
+     * Retrieves the proxy outbound configuration for the given profile item.
+     *
+     * @param profileItem The profile item for which to get the proxy outbound configuration.
+     * @return The proxy outbound configuration as a V2rayConfig.OutboundBean, or null if not found.
+     */
     fun getProxyOutbound(profileItem: ProfileItem): V2rayConfig.OutboundBean? {
         return when (profileItem.configType) {
             EConfigType.VMESS -> VmessFmt.toOutbound(profileItem)
