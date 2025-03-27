@@ -6,11 +6,17 @@ import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.V2rayConfig.OutboundBean
 import com.v2ray.ang.extension.idnHost
+import com.v2ray.ang.extension.removeWhiteSpace
 import com.v2ray.ang.util.Utils
 import java.net.URI
-import kotlin.text.orEmpty
 
 object WireguardFmt : FmtBase() {
+    /**
+     * Parses a URI string into a ProfileItem object.
+     *
+     * @param str the URI string to parse
+     * @return the parsed ProfileItem object, or null if parsing fails
+     */
     fun parse(str: String): ProfileItem? {
         val config = ProfileItem.create(EConfigType.WIREGUARD)
 
@@ -32,6 +38,12 @@ object WireguardFmt : FmtBase() {
         return config
     }
 
+    /**
+     * Parses a Wireguard configuration file string into a ProfileItem object.
+     *
+     * @param str the Wireguard configuration file string to parse
+     * @return the parsed ProfileItem object, or null if parsing fails
+     */
     fun parseWireguardConfFile(str: String): ProfileItem? {
         val config = ProfileItem.create(EConfigType.WIREGUARD)
 
@@ -86,6 +98,12 @@ object WireguardFmt : FmtBase() {
         return config
     }
 
+    /**
+     * Converts a ProfileItem object to an OutboundBean object.
+     *
+     * @param profileItem the ProfileItem object to convert
+     * @return the converted OutboundBean object, or null if conversion fails
+     */
     fun toOutbound(profileItem: ProfileItem): OutboundBean? {
         val outboundBean = OutboundBean.create(EConfigType.WIREGUARD)
 
@@ -104,19 +122,25 @@ object WireguardFmt : FmtBase() {
         return outboundBean
     }
 
+    /**
+     * Converts a ProfileItem object to a URI string.
+     *
+     * @param config the ProfileItem object to convert
+     * @return the converted URI string
+     */
     fun toUri(config: ProfileItem): String {
         val dicQuery = HashMap<String, String>()
 
         dicQuery["publickey"] = config.publicKey.orEmpty()
         if (config.reserved != null) {
-            dicQuery["reserved"] = Utils.removeWhiteSpace(config.reserved).orEmpty()
+            dicQuery["reserved"] = config.reserved.removeWhiteSpace().orEmpty()
         }
-        dicQuery["address"] = Utils.removeWhiteSpace(config.localAddress).orEmpty()
+        dicQuery["address"] = config.localAddress.removeWhiteSpace().orEmpty()
         if (config.mtu != null) {
             dicQuery["mtu"] = config.mtu.toString()
         }
         if (config.preSharedKey != null) {
-            dicQuery["presharedkey"] = Utils.removeWhiteSpace(config.preSharedKey).orEmpty()
+            dicQuery["presharedkey"] = config.preSharedKey.removeWhiteSpace().orEmpty()
         }
 
         return toUri(config, config.secretKey, dicQuery)

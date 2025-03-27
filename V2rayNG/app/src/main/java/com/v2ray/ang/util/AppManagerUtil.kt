@@ -4,36 +4,33 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import com.v2ray.ang.dto.AppInfo
-import io.reactivex.rxjava3.core.Observable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object AppManagerUtil {
-    private fun loadNetworkAppList(ctx: Context): ArrayList<AppInfo> {
-        val packageManager = ctx.packageManager
-        val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
-        val apps = ArrayList<AppInfo>()
+    /**
+     * Load the list of network applications.
+     *
+     * @param context The context to use.
+     * @return A list of AppInfo objects representing the network applications.
+     */
+    suspend fun loadNetworkAppList(context: Context): ArrayList<AppInfo> =
+        withContext(Dispatchers.IO) {
+            val packageManager = context.packageManager
+            val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
+            val apps = ArrayList<AppInfo>()
 
-        for (pkg in packages) {
-            val applicationInfo = pkg.applicationInfo ?: continue
+            for (pkg in packages) {
+                val applicationInfo = pkg.applicationInfo ?: continue
 
-            val appName = applicationInfo.loadLabel(packageManager).toString()
-            val appIcon = applicationInfo.loadIcon(packageManager) ?: continue
-            val isSystemApp = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) > 0
+                val appName = applicationInfo.loadLabel(packageManager).toString()
+                val appIcon = applicationInfo.loadIcon(packageManager) ?: continue
+                val isSystemApp = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) > 0
 
-            val appInfo = AppInfo(appName, pkg.packageName, appIcon, isSystemApp, 0)
-            apps.add(appInfo)
+                val appInfo = AppInfo(appName, pkg.packageName, appIcon, isSystemApp, 0)
+                apps.add(appInfo)
+            }
+
+            return@withContext apps
         }
-
-        return apps
-    }
-
-    fun rxLoadNetworkAppList(ctx: Context): Observable<ArrayList<AppInfo>> =
-        Observable.unsafeCreate {
-            it.onNext(loadNetworkAppList(ctx))
-        }
-
-//    val PackageInfo.hasInternetPermission: Boolean
-//        get() {
-//            val permissions = requestedPermissions
-//            return permissions?.any { it == Manifest.permission.INTERNET } ?: false
-//        }
 }

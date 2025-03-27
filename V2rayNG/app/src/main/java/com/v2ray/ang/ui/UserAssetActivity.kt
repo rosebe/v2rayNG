@@ -19,18 +19,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.tbruyelle.rxpermissions3.RxPermissions
 import com.v2ray.ang.AppConfig
-import com.v2ray.ang.AppConfig.LOOPBACK
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivitySubSettingBinding
 import com.v2ray.ang.databinding.ItemRecyclerUserAssetBinding
-import com.v2ray.ang.databinding.LayoutProgressBinding
 import com.v2ray.ang.dto.AssetUrlItem
 import com.v2ray.ang.extension.toTrafficString
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,9 +36,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.URL
 import java.text.DateFormat
 import java.util.Date
 
@@ -50,6 +45,38 @@ class UserAssetActivity : BaseActivity() {
     val extDir by lazy { File(Utils.userAssetPath(this)) }
     val builtInGeoFiles = arrayOf("geosite.dat", "geoip.dat")
 
+    private val requestStoragePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "*/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+
+            try {
+                chooseFile.launch(
+                    Intent.createChooser(
+                        intent,
+                        getString(R.string.title_file_chooser)
+                    )
+                )
+            } catch (ex: android.content.ActivityNotFoundException) {
+                toast(R.string.toast_require_file_manager)
+            }
+        } else {
+            toast(R.string.toast_permission_denied)
+        }
+    }
+
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            scanQRCodeForAssetURL.launch(Intent(this, ScannerActivity::class.java))
+        } else {
+            toast(R.string.toast_permission_denied)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +85,7 @@ class UserAssetActivity : BaseActivity() {
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
         binding.recyclerView.adapter = UserAssetAdapter()
     }
 
@@ -86,27 +114,7 @@ class UserAssetActivity : BaseActivity() {
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
-        RxPermissions(this)
-            .request(permission)
-            .subscribe {
-                if (it) {
-                    val intent = Intent(Intent.ACTION_GET_CONTENT)
-                    intent.type = "*/*"
-                    intent.addCategory(Intent.CATEGORY_OPENABLE)
-
-                    try {
-                        chooseFile.launch(
-                            Intent.createChooser(
-                                intent,
-                                getString(R.string.title_file_chooser)
-                            )
-                        )
-                    } catch (ex: android.content.ActivityNotFoundException) {
-                        toast(R.string.toast_require_file_manager)
-                    }
-                } else
-                    toast(R.string.toast_permission_denied)
-            }
+        requestStoragePermissionLauncher.launch(permission)
     }
 
     val chooseFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -158,14 +166,7 @@ class UserAssetActivity : BaseActivity() {
     }
 
     private fun importAssetFromQRcode(): Boolean {
-        RxPermissions(this)
-            .request(Manifest.permission.CAMERA)
-            .subscribe {
-                if (it)
-                    scanQRCodeForAssetURL.launch(Intent(this, ScannerActivity::class.java))
-                else
-                    toast(R.string.toast_permission_denied)
-            }
+        requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         return true
     }
 
@@ -182,8 +183,10 @@ class UserAssetActivity : BaseActivity() {
                 return false
             }
             // Send URL to UserAssetUrlActivity for Processing
-            startActivity(Intent(this, UserAssetUrlActivity::class.java)
-                .putExtra(UserAssetUrlActivity.ASSET_URL_QRCODE, url))
+            startActivity(
+                Intent(this, UserAssetUrlActivity::class.java)
+                    .putExtra(UserAssetUrlActivity.ASSET_URL_QRCODE, url)
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             return false
@@ -192,32 +195,31 @@ class UserAssetActivity : BaseActivity() {
     }
 
     private fun downloadGeoFiles() {
-        val dialog = AlertDialog.Builder(this)
-            .setView(LayoutProgressBinding.inflate(layoutInflater).root)
-            .setCancelable(false)
-            .show()
+        binding.pbWaiting.show()
         toast(R.string.msg_downloading_content)
 
         val httpPort = SettingsManager.getHttpPort()
         var assets = MmkvManager.decodeAssetUrls()
         assets = addBuiltInGeoItems(assets)
 
-        assets.forEach {
-            //toast(getString(R.string.msg_downloading_content) + it)
-            lifecycleScope.launch(Dispatchers.IO) {
-                var result = downloadGeo(it.second, 60000, httpPort)
+        var resultCount = 0
+        lifecycleScope.launch(Dispatchers.IO) {
+            assets.forEach {
+                var result = downloadGeo(it.second, 15000, httpPort)
                 if (!result) {
-                    result = downloadGeo(it.second, 60000, 0)
+                    result = downloadGeo(it.second, 15000, 0)
                 }
-                launch(Dispatchers.Main) {
-                    if (result) {
-                        toast(getString(R.string.toast_success) + " " + it.second.remarks)
-                        binding.recyclerView.adapter?.notifyDataSetChanged()
-                    } else {
-                        toast(getString(R.string.toast_failure) + " " + it.second.remarks)
-                    }
-                    dialog.dismiss()
+                if (result)
+                    resultCount++
+            }
+            withContext(Dispatchers.Main) {
+                if (resultCount > 0) {
+                    toast(getString(R.string.title_update_config_count, resultCount))
+                    binding.recyclerView.adapter?.notifyDataSetChanged()
+                } else {
+                    toast(getString(R.string.toast_failure))
                 }
+                binding.pbWaiting.hide()
             }
         }
     }
@@ -225,22 +227,10 @@ class UserAssetActivity : BaseActivity() {
     private fun downloadGeo(item: AssetUrlItem, timeout: Int, httpPort: Int): Boolean {
         val targetTemp = File(extDir, item.remarks + "_temp")
         val target = File(extDir, item.remarks)
-        var conn: HttpURLConnection? = null
         //Log.d(AppConfig.ANG_PACKAGE, url)
 
+        val conn = HttpUtil.createProxyConnection(item.url, httpPort, timeout, timeout, needStream = true) ?: return false
         try {
-            conn = if (httpPort == 0) {
-                URL(item.url).openConnection() as HttpURLConnection
-            } else {
-                URL(item.url).openConnection(
-                    Proxy(
-                        Proxy.Type.HTTP,
-                        InetSocketAddress(LOOPBACK, httpPort)
-                    )
-                ) as HttpURLConnection
-            }
-            conn.connectTimeout = timeout
-            conn.readTimeout = timeout
             val inputStream = conn.inputStream
             val responseCode = conn.responseCode
             if (responseCode == HttpURLConnection.HTTP_OK) {

@@ -1,13 +1,12 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.text.method.ScrollingMovementMethod
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityLogcatBinding
@@ -18,129 +17,132 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
-class LogcatActivity : BaseActivity() {
+
+class LogcatActivity : BaseActivity(), SwipeRefreshLayout.OnRefreshListener {
     private val binding by lazy { ActivityLogcatBinding.inflate(layoutInflater) }
-    private val throttleManager = ThrottleManager()
+
+    var logsetsAll: MutableList<String> = mutableListOf()
+    var logsets: MutableList<String> = mutableListOf()
+    private val adapter by lazy { LogcatRecyclerAdapter(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
         title = getString(R.string.title_logcat)
-        logcat(false)
+
+        binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
+        binding.recyclerView.adapter = adapter
+
+        binding.refreshLayout.setOnRefreshListener(this)
+
+        logsets.add(getString(R.string.pull_down_to_refresh))
     }
 
-    class ThrottleManager {
-        private val throttleMap = mutableMapOf<String, Long>()
+    private fun getLogcat() {
 
-        companion object {
-            private const val THROTTLE_DURATION = 1000L
-        }
+        try {
+            binding.refreshLayout.isRefreshing = true
 
-        @Synchronized
-        fun shouldProcess(key: String): Boolean {
-            val currentTime = System.currentTimeMillis()
-            val lastProcessTime = throttleMap[key] ?: 0L
-
-            return if (currentTime - lastProcessTime > THROTTLE_DURATION) {
-                throttleMap[key] = currentTime
-                true
-            } else {
-                false
-            }
-        }
-
-        @Synchronized
-        fun reset(key: String) {
-            throttleMap.remove(key)
-        }
-    }
-
-    private fun logcat(shouldFlushLog: Boolean) {
-        binding.pbWaiting.visibility = View.VISIBLE
-
-        lifecycleScope.launch(Dispatchers.Default) {
-            try {
-                if (shouldFlushLog) {
-                    val lst = linkedSetOf("logcat", "-c")
-                    withContext(Dispatchers.IO) {
-                        val process = Runtime.getRuntime().exec(lst.toTypedArray())
-                        process.waitFor()
-                    }
-                }
-
-                val lst = linkedSetOf(
-                    "logcat", "-d", "-v", "time", "-s",
-                    "GoLog,tun2socks,$ANG_PACKAGE,AndroidRuntime,System.err"
-                )
-
+            lifecycleScope.launch(Dispatchers.Default) {
+                val lst = LinkedHashSet<String>()
+                lst.add("logcat")
+                lst.add("-d")
+                lst.add("-v")
+                lst.add("time")
+                lst.add("-s")
+                lst.add("GoLog,tun2socks,${ANG_PACKAGE},AndroidRuntime,System.err")
                 val process = withContext(Dispatchers.IO) {
                     Runtime.getRuntime().exec(lst.toTypedArray())
                 }
 
-                val allLogs = process.inputStream.bufferedReader().use { it.readLines() }
-                val filteredLogs = processLogs(allLogs)
-
-                withContext(Dispatchers.Main) {
-                    updateLogDisplay(filteredLogs)
+                val allText = process.inputStream.bufferedReader().use { it.readLines() }.reversed()
+                launch(Dispatchers.Main) {
+                    logsetsAll = allText.toMutableList()
+                    logsets = allText.toMutableList()
+                    adapter.notifyDataSetChanged()
+                    binding.refreshLayout.isRefreshing = false
                 }
-
-            } catch (e: IOException) {
-                withContext(Dispatchers.Main) {
-                    binding.pbWaiting.visibility = View.GONE
-                    toast(R.string.toast_failure)
-                }
-                e.printStackTrace()
             }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
-    private fun processLogs(logs: List<String>): List<String> {
-        val processedLogs = mutableListOf<String>()
-        var isNotMatch = false
-
-        for (line in logs) {
-            when {
-                line.contains("zxing.NotFoundException", ignoreCase = true) -> {
-                    if (!isNotMatch) {
-                        if (throttleManager.shouldProcess("NotFoundException")) {
-                            processedLogs.add(line)
-                            isNotMatch = true
-                        }
-                    }
+    private fun clearLogcat() {
+        try {
+            lifecycleScope.launch(Dispatchers.Default) {
+                val lst = LinkedHashSet<String>()
+                lst.add("logcat")
+                lst.add("-c")
+                withContext(Dispatchers.IO) {
+                    val process = Runtime.getRuntime().exec(lst.toTypedArray())
+                    process.waitFor()
                 }
-                else -> processedLogs.add(line)
+                launch(Dispatchers.Main) {
+                    logsetsAll.clear()
+                    logsets.clear()
+                    adapter.notifyDataSetChanged()
+                }
             }
-        }
-
-        return processedLogs.take(500)
-    }
-
-    private fun updateLogDisplay(logs: List<String>) {
-        binding.tvLogcat.text = logs.joinToString("\n")
-        binding.tvLogcat.movementMethod = ScrollingMovementMethod()
-        binding.pbWaiting.visibility = View.GONE
-
-        Handler(Looper.getMainLooper()).post {
-            binding.svLogcat.fullScroll(View.FOCUS_DOWN)
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_logcat, menu)
+
+        val searchItem = menu.findItem(R.id.search_view)
+        if (searchItem != null) {
+            val searchView = searchItem.actionView as SearchView
+            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean = false
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    filterLogs(newText)
+                    return false
+                }
+            })
+            searchView.setOnCloseListener {
+                filterLogs("")
+                false
+            }
+        }
+
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.copy_all -> {
-            Utils.setClipboard(this, binding.tvLogcat.text.toString())
+            Utils.setClipboard(this, logsets.joinToString("\n"))
             toast(R.string.toast_success)
             true
         }
+
         R.id.clear_all -> {
-            throttleManager.reset("zxing.NotFoundException")
-            logcat(true)
+            clearLogcat()
             true
         }
+
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun filterLogs(content: String?): Boolean {
+        val key = content?.trim()
+        logsets = if (key.isNullOrEmpty()) {
+            logsetsAll.toMutableList()
+        } else {
+            logsetsAll.filter { it.contains(key) }.toMutableList()
+        }
+
+        adapter?.notifyDataSetChanged()
+        return true
+    }
+
+    override fun onRefresh() {
+        getLogcat()
     }
 }

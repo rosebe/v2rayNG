@@ -7,16 +7,22 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.preference.PreferenceManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.util.Utils
+import com.v2ray.ang.handler.SettingsManager
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
+    /**
+     * Starts listening for preference changes.
+     */
     fun startListenPreferenceChange() {
         PreferenceManager.getDefaultSharedPreferences(getApplication())
             .registerOnSharedPreferenceChangeListener(this)
     }
 
+    /**
+     * Called when the ViewModel is cleared.
+     */
     override fun onCleared() {
         PreferenceManager.getDefaultSharedPreferences(getApplication())
             .unregisterOnSharedPreferenceChangeListener(this)
@@ -24,11 +30,17 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         super.onCleared()
     }
 
+    /**
+     * Called when a shared preference is changed.
+     * @param sharedPreferences The shared preferences.
+     * @param key The key of the changed preference.
+     */
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         Log.d(AppConfig.ANG_PACKAGE, "Observe settings changed: $key")
         when (key) {
             AppConfig.PREF_MODE,
             AppConfig.PREF_VPN_DNS,
+            AppConfig.PREF_VPN_BYPASS_LAN,
             AppConfig.PREF_REMOTE_DNS,
             AppConfig.PREF_DOMESTIC_DNS,
             AppConfig.PREF_DNS_HOSTS,
@@ -61,6 +73,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             AppConfig.PREF_BYPASS_APPS,
             AppConfig.PREF_CONFIRM_REMOVE,
             AppConfig.PREF_START_SCAN_IMMEDIATE,
+            AppConfig.PREF_DOUBLE_COLUMN_DISPLAY,
             AppConfig.SUBSCRIPTION_AUTO_UPDATE,
             AppConfig.PREF_FRAGMENT_ENABLED,
             AppConfig.PREF_MUX_ENABLED,
@@ -76,13 +89,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             AppConfig.PREF_MUX_XUDP_CONCURRENCY -> {
                 MmkvManager.encodeSettings(key, sharedPreferences.getString(key, "8"))
             }
-
-//            AppConfig.PREF_PER_APP_PROXY_SET -> {
-//                MmkvManager.encodeSettings(key, sharedPreferences.getStringSet(key, setOf()))
-//            }
         }
         if (key == AppConfig.PREF_UI_MODE_NIGHT) {
-            Utils.setNightMode()
+            SettingsManager.setNightMode()
         }
     }
 }

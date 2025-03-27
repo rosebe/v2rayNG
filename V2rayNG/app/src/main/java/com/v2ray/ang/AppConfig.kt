@@ -12,7 +12,6 @@ object AppConfig {
 
     /** Legacy configuration keys. */
     const val ANG_CONFIG = "ang_config"
-    const val PREF_INAPP_BUY_IS_PREMIUM = "pref_inapp_buy_is_premium"
 
     /** Preferences mapped to MMKV storage. */
     const val PREF_SNIFFING_ENABLED = "pref_sniffing_enabled"
@@ -25,6 +24,7 @@ object AppConfig {
     const val PREF_APPEND_HTTP_PROXY = "pref_append_http_proxy"
     const val PREF_LOCAL_DNS_PORT = "pref_local_dns_port"
     const val PREF_VPN_DNS = "pref_vpn_dns"
+    const val PREF_VPN_BYPASS_LAN = "pref_vpn_bypass_lan"
     const val PREF_ROUTING_DOMAIN_STRATEGY = "pref_routing_domain_strategy"
     const val PREF_ROUTING_RULESET = "pref_routing_ruleset"
     const val PREF_MUX_ENABLED = "pref_mux_enabled"
@@ -42,6 +42,7 @@ object AppConfig {
     const val PREF_SPEED_ENABLED = "pref_speed_enabled"
     const val PREF_CONFIRM_REMOVE = "pref_confirm_remove"
     const val PREF_START_SCAN_IMMEDIATE = "pref_start_scan_immediate"
+    const val PREF_DOUBLE_COLUMN_DISPLAY = "pref_double_column_display"
     const val PREF_LANGUAGE = "pref_language"
     const val PREF_UI_MODE_NIGHT = "pref_ui_mode_night"
     const val PREF_PREFER_IPV6 = "pref_prefer_ipv6"

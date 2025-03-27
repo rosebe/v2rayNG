@@ -48,12 +48,14 @@
                         android:id="@+id/tab_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:padding="@dimen/padding_spacing_dp8"
                         app:tabIndicatorFullWidth="false"
                         app:tabMode="scrollable"
                         app:tabTextAppearance="@style/TabLayoutTextStyle" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recycler_view"
+                        android:scrollbars="vertical"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
@@ -62,21 +64,26 @@
                     <LinearLayout
                         android:id="@+id/layout_test"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/connection_test_height"
-                        android:background="@color/colorPrimary"
+                        android:layout_height="@dimen/view_height_dp64"
                         android:clickable="true"
                         android:focusable="true"
-                        android:gravity="center|start"
                         android:nextFocusLeft="@+id/recycler_view"
+                        android:orientation="vertical"
                         android:nextFocusRight="@+id/fab">
+
+                        <View
+                            android:layout_width="wrap_content"
+                            android:layout_height="1dp"
+                            android:background="@color/divider_color_light" />
 
                         <TextView
                             android:id="@+id/tv_test_state"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:maxLines="2"
                             android:minLines="1"
-                            android:paddingStart="@dimen/padding_start"
+                            android:gravity="start|center"
+                            android:paddingStart="@dimen/padding_spacing_dp16"
                             android:text="@string/connection_test_pending"
                             android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
@@ -84,23 +91,18 @@
                 </LinearLayout>
 
                 <FrameLayout
-                    android:id="@+id/fabProgressCircle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|end"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginEnd="@dimen/padding_spacing_dp16"
+                    android:layout_marginBottom="@dimen/padding_spacing_dp8">
 
                     <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentBottom="true"
                         android:layout_gravity="bottom|end"
-                        android:layout_marginLeft="16dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginRight="16dp"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="@dimen/view_height_dp64"
                         android:clickable="true"
                         android:focusable="true"
                         android:nextFocusLeft="@+id/layout_test"

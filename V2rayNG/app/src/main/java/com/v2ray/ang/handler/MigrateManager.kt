@@ -8,14 +8,19 @@ import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.dto.NetworkType
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.ServerConfig
+import com.v2ray.ang.extension.removeWhiteSpace
 import com.v2ray.ang.handler.MmkvManager.decodeServerConfig
 import com.v2ray.ang.util.JsonUtil
-import com.v2ray.ang.util.Utils
 
 object MigrateManager {
     private const val ID_SERVER_CONFIG = "SERVER_CONFIG"
     private val serverStorage by lazy { MMKV.mmkvWithID(ID_SERVER_CONFIG, MMKV.MULTI_PROCESS_MODE) }
 
+    /**
+     * Migrates server configurations to profile items.
+     *
+     * @return True if migration was successful, false otherwise.
+     */
     fun migrateServerConfig2Profile(): Boolean {
         if (serverStorage.count().toInt() == 0) {
             return false
@@ -44,6 +49,12 @@ object MigrateManager {
         return true
     }
 
+    /**
+     * Migrates a server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrateServerConfig2ProfileSub(configOld: ServerConfig): ProfileItem? {
         return when (configOld.getProxyOutbound()?.protocol) {
             EConfigType.VMESS.name.lowercase() -> migrate2ProfileCommon(configOld)
@@ -62,6 +73,12 @@ object MigrateManager {
         }
     }
 
+    /**
+     * Migrates a common server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrate2ProfileCommon(configOld: ServerConfig): ProfileItem? {
         val config = ProfileItem.create(configOld.configType)
 
@@ -92,7 +109,7 @@ object MigrateManager {
         config.insecure = tlsSettings?.allowInsecure
         config.sni = tlsSettings?.serverName
         config.fingerPrint = tlsSettings?.fingerprint
-        config.alpn = Utils.removeWhiteSpace(tlsSettings?.alpn?.joinToString(",")).toString()
+        config.alpn = tlsSettings?.alpn?.joinToString(",").removeWhiteSpace().toString()
 
         config.publicKey = tlsSettings?.publicKey
         config.shortId = tlsSettings?.shortId
@@ -101,6 +118,12 @@ object MigrateManager {
         return config
     }
 
+    /**
+     * Migrates a SOCKS server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrate2ProfileSocks(configOld: ServerConfig): ProfileItem? {
         val config = ProfileItem.create(EConfigType.SOCKS)
 
@@ -114,6 +137,12 @@ object MigrateManager {
         return config
     }
 
+    /**
+     * Migrates an HTTP server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrate2ProfileHttp(configOld: ServerConfig): ProfileItem? {
         val config = ProfileItem.create(EConfigType.HTTP)
 
@@ -127,6 +156,12 @@ object MigrateManager {
         return config
     }
 
+    /**
+     * Migrates a WireGuard server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrate2ProfileWireguard(configOld: ServerConfig): ProfileItem? {
         val config = ProfileItem.create(EConfigType.WIREGUARD)
 
@@ -137,14 +172,20 @@ object MigrateManager {
 
         outbound.settings?.let { wireguard ->
             config.secretKey = wireguard.secretKey
-            config.localAddress = Utils.removeWhiteSpace((wireguard.address as List<*>).joinToString(",")).toString()
+            config.localAddress =  (wireguard.address as List<*>).joinToString(",").removeWhiteSpace().toString()
             config.publicKey = wireguard.peers?.getOrNull(0)?.publicKey
             config.mtu = wireguard.mtu
-            config.reserved = Utils.removeWhiteSpace(wireguard.reserved?.joinToString(",")).toString()
+            config.reserved = wireguard.reserved?.joinToString(",").removeWhiteSpace().toString()
         }
         return config
     }
 
+    /**
+     * Migrates a Hysteria2 server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrate2ProfileHysteria2(configOld: ServerConfig): ProfileItem? {
         val config = ProfileItem.create(EConfigType.HYSTERIA2)
 
@@ -158,7 +199,7 @@ object MigrateManager {
         outbound.streamSettings?.tlsSettings?.let { tlsSetting ->
             config.insecure = tlsSetting.allowInsecure
             config.sni = tlsSetting.serverName
-            config.alpn = Utils.removeWhiteSpace(tlsSetting.alpn?.joinToString(",")).orEmpty()
+            config.alpn = tlsSetting.alpn?.joinToString(",").removeWhiteSpace().orEmpty()
 
         }
         config.obfsPassword = outbound.settings?.obfsPassword
@@ -166,6 +207,12 @@ object MigrateManager {
         return config
     }
 
+    /**
+     * Migrates a custom server configuration to a profile item.
+     *
+     * @param configOld The old server configuration.
+     * @return The profile item.
+     */
     private fun migrate2ProfileCustom(configOld: ServerConfig): ProfileItem? {
         val config = ProfileItem.create(EConfigType.CUSTOM)
 
@@ -177,7 +224,12 @@ object MigrateManager {
         return config
     }
 
-
+    /**
+     * Decodes the old server configuration.
+     *
+     * @param guid The server GUID.
+     * @return The old server configuration.
+     */
     private fun decodeServerConfigOld(guid: String): ServerConfig? {
         if (guid.isBlank()) {
             return null

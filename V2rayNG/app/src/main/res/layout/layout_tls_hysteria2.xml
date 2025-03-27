@@ -2,14 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/layout_margin_top_height"
+    android:layout_marginTop="@dimen/padding_spacing_dp16"
     android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/lay_stream_security"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/activity_horizontal_margin"
+        android:layout_marginBottom="@dimen/padding_spacing_dp16"
 
         android:orientation="vertical">
 
@@ -19,9 +19,11 @@
             android:text="@string/server_lab_stream_security" />
 
         <Spinner
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:layout_marginBottom="@dimen/padding_spacing_dp8"
             android:id="@+id/sp_stream_security"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/edit_height"
+            android:layout_height="wrap_content"
             android:entries="@array/streamsecuritys"
             android:nextFocusDown="@+id/et_sni" />
 
@@ -31,7 +33,7 @@
         android:id="@+id/lay_sni"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/activity_horizontal_margin"
+        android:layout_marginBottom="@dimen/padding_spacing_dp16"
         android:orientation="vertical">
 
         <TextView
@@ -42,7 +44,7 @@
         <EditText
             android:id="@+id/et_sni"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/edit_height"
+            android:layout_height="wrap_content"
             android:inputType="text"
             android:nextFocusDown="@+id/sp_stream_fingerprint" />
 
@@ -61,16 +63,18 @@
             android:text="@string/server_lab_allow_insecure" />
 
         <Spinner
+            android:layout_marginTop="@dimen/padding_spacing_dp8"
+            android:layout_marginBottom="@dimen/padding_spacing_dp8"
             android:id="@+id/sp_allow_insecure"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/edit_height"
+            android:layout_height="wrap_content"
             android:entries="@array/allowinsecures" />
 
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:layout_marginBottom="@dimen/padding_spacing_dp16"
             android:orientation="vertical">
 
             <TextView
@@ -81,7 +85,7 @@
             <EditText
                 android:id="@+id/et_pinsha256"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/edit_height"
+                android:layout_height="wrap_content"
                 android:inputType="text" />
 
         </LinearLayout>
