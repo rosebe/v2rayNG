@@ -1,5 +1,5 @@
 diff --git a/V2rayNG/app/build.gradle.kts b/V2rayNG/app/build.gradle.kts
-index 0e88941..427b643 100644
+index f9ba007..fb9eaca 100644
 --- a/V2rayNG/app/build.gradle.kts
 +++ b/V2rayNG/app/build.gradle.kts
 @@ -50,11 +50,6 @@ android {
@@ -14,15 +14,16 @@ index 0e88941..427b643 100644
          create("playstore") {
              dimension = "distribution"
              buildConfigField("String", "DISTRIBUTION", "\"Play Store\"")
-@@ -79,25 +74,6 @@ android {
+@@ -79,26 +74,6 @@ android {
  
      applicationVariants.all {
          val variant = this
 -        val isFdroid = variant.productFlavors.any { it.name == "fdroid" }
 -        if (isFdroid) {
 -            val versionCodes =
--                mapOf("armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
--            )
+-                mapOf(
+-                    "armeabi-v7a" to 2, "arm64-v8a" to 1, "x86" to 4, "x86_64" to 3, "universal" to 0
+-                )
 -
 -            variant.outputs
 -                .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
@@ -40,26 +41,11 @@ index 0e88941..427b643 100644
              val versionCodes =
                  mapOf("armeabi-v7a" to 4, "arm64-v8a" to 4, "x86" to 4, "x86_64" to 4, "universal" to 4)
  
-@@ -110,16 +86,18 @@ android {
-                         "universal"
- 
-                     output.outputFileName = "v2rayNG_${variant.versionName}_${abi}.apk"
--                    if (versionCodes.containsKey(abi)) {
-+                    if (versionCodes.containsKey(abi))
-+					{
-                         output.versionCodeOverride =
-                             (1000000 * versionCodes[abi]!!).plus(variant.versionCode)
--                    } else {
-+                    }
-+					else
-+					{
+@@ -118,7 +93,6 @@ android {
                          return@forEach
                      }
                  }
 -        }
      }
--
-+
+ 
      buildFeatures {
-         viewBinding = true
-         buildConfig = true
