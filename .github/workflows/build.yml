@@ -181,9 +181,11 @@ jobs:
         #git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd ${{ github.workspace }}/AndroidLibXrayLite
         mkdir -p assets data
-        sed -i "s/dyhkwong\/v2ray-/v2ray\//" gen_assets.sh
-        sed -i "s/jq -r .assets\[\]./grep /" gen_assets.sh
-        sed -i "s/grep geoip.dat/cut -d \'\"\' -f 4 /" gen_assets.sh
+        
+        #sed -i "s/dyhkwong\/v2ray-/v2ray\//" gen_assets.sh
+        #sed -i "s/jq -r .assets\[\]./grep /" gen_assets.sh
+        #sed -i "s/grep geoip.dat/cut -d \'\"\' -f 4 /" gen_assets.sh
+        
         bash gen_assets.sh download
         cp -v data/*.dat assets/
         #sed -i "s/github.com\/sagernet\/gomobile v0.1.4/golang.org\/x\/mobile v0.0.0-20241213221354-a87c1cf6cf46/" go.mod
