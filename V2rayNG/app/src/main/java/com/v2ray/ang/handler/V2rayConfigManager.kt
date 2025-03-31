@@ -4,7 +4,6 @@ import android.content.Context
 import android.text.TextUtils
 import android.util.Log
 import com.v2ray.ang.AppConfig
-import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.AppConfig.DEFAULT_NETWORK
 import com.v2ray.ang.AppConfig.DNS_ALIDNS_ADDRESSES
 import com.v2ray.ang.AppConfig.DNS_ALIDNS_DOMAIN
@@ -52,6 +51,7 @@ import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 
 object V2rayConfigManager {
+    private var initConfigCache: String? = null
 
     /**
      * Retrieves the V2ray configuration for the given GUID.
@@ -63,47 +63,72 @@ object V2rayConfigManager {
     fun getV2rayConfig(context: Context, guid: String): ConfigResult {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
-            if (config.configType == EConfigType.CUSTOM) {
-                val raw = MmkvManager.decodeServerRaw(guid) ?: return ConfigResult(false)
-                val domainPort = config.getServerAddressAndPort()
-                return ConfigResult(true, guid, raw, domainPort)
+            return if (config.configType == EConfigType.CUSTOM) {
+                getV2rayCustomConfig(guid, config)
+            } else {
+                getV2rayNormalConfig(context, guid, config)
             }
-
-            val result = getV2rayNonCustomConfig(context, config)
-            //Log.d(ANG_PACKAGE, result.content)
-            result.guid = guid
-            return result
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to get V2ray config", e)
             return ConfigResult(false)
         }
     }
 
     /**
-     * Retrieves the non-custom V2ray configuration.
+     * Retrieves the speedtest V2ray configuration for the given GUID.
      *
-     * @param context The context in which the function is called.
+     * @param context The context of the caller.
+     * @param guid The unique identifier for the V2ray configuration.
+     * @return A ConfigResult object containing the configuration details or indicating failure.
+     */
+    fun getV2rayConfig4Speedtest(context: Context, guid: String): ConfigResult {
+        try {
+            val config = MmkvManager.decodeServerConfig(guid) ?: return ConfigResult(false)
+            return if (config.configType == EConfigType.CUSTOM) {
+                getV2rayCustomConfig(guid, config)
+            } else {
+                getV2rayNormalConfig4Speedtest(context, guid, config)
+            }
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to get V2ray config for speedtest", e)
+            return ConfigResult(false)
+        }
+    }
+
+    /**
+     * Retrieves the custom V2ray configuration.
+     *
+     * @param guid The unique identifier for the V2ray configuration.
      * @param config The profile item containing the configuration details.
      * @return A ConfigResult object containing the result of the configuration retrieval.
      */
-    private fun getV2rayNonCustomConfig(context: Context, config: ProfileItem): ConfigResult {
+    private fun getV2rayCustomConfig(guid: String, config: ProfileItem): ConfigResult {
+        val raw = MmkvManager.decodeServerRaw(guid) ?: return ConfigResult(false)
+        val domainPort = config.getServerAddressAndPort()
+        return ConfigResult(true, guid, raw, domainPort)
+    }
+
+    /**
+     * Retrieves the normal V2ray configuration.
+     *
+     * @param context The context in which the function is called.
+     * @param guid The unique identifier for the V2ray configuration.
+     * @param config The profile item containing the configuration details.
+     * @return A ConfigResult object containing the result of the configuration retrieval.
+     */
+    private fun getV2rayNormalConfig(context: Context, guid: String, config: ProfileItem): ConfigResult {
         val result = ConfigResult(false)
 
         val address = config.server ?: return result
         if (!Utils.isIpAddress(address)) {
             if (!Utils.isValidUrl(address)) {
-                Log.d(ANG_PACKAGE, "$address is an invalid ip or domain")
+                Log.w(AppConfig.TAG, "$address is an invalid ip or domain")
                 return result
             }
         }
 
-        val assets = Utils.readTextFromAssets(context, "v2ray_config.json")
-        if (TextUtils.isEmpty(assets)) {
-            return result
-        }
-        val v2rayConfig = JsonUtil.fromJson(assets, V2rayConfig::class.java) ?: return result
-        v2rayConfig.log.loglevel =
-            MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
+        val v2rayConfig = initV2rayConfig(context) ?: return result
+        v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
         v2rayConfig.remarks = config.remarks
 
         inbounds(v2rayConfig)
@@ -129,7 +154,73 @@ object V2rayConfigManager {
         result.status = true
         result.content = v2rayConfig.toPrettyPrinting()
         result.domainPort = if (retMore.first) retMore.second else retOut.second
+        result.guid = guid
         return result
+    }
+
+    /**
+     * Retrieves the normal V2ray configuration for speedtest.
+     *
+     * @param context The context in which the function is called.
+     * @param guid The unique identifier for the V2ray configuration.
+     * @param config The profile item containing the configuration details.
+     * @return A ConfigResult object containing the result of the configuration retrieval.
+     */
+    private fun getV2rayNormalConfig4Speedtest(context: Context, guid: String, config: ProfileItem): ConfigResult {
+        val result = ConfigResult(false)
+
+        val address = config.server ?: return result
+        if (!Utils.isIpAddress(address)) {
+            if (!Utils.isValidUrl(address)) {
+                Log.w(AppConfig.TAG, "$address is an invalid ip or domain")
+                return result
+            }
+        }
+
+        val v2rayConfig = initV2rayConfig(context) ?: return result
+
+        val isPlugin = config.configType == EConfigType.HYSTERIA2
+        val retOut = outbounds(v2rayConfig, config, isPlugin) ?: return result
+        val retMore = moreOutbounds(v2rayConfig, config.subscriptionId, isPlugin)
+
+        v2rayConfig.log.loglevel = MmkvManager.decodeSettingsString(AppConfig.PREF_LOGLEVEL) ?: "warning"
+        v2rayConfig.inbounds.clear()
+        v2rayConfig.routing.rules.clear()
+        v2rayConfig.dns = null
+        v2rayConfig.fakedns = null
+        v2rayConfig.stats = null
+        v2rayConfig.policy = null
+
+        v2rayConfig.outbounds.forEach { key ->
+            key.mux = null
+        }
+
+        result.status = true
+        result.content = v2rayConfig.toPrettyPrinting()
+        result.domainPort = if (retMore.first) retMore.second else retOut.second
+        result.guid = guid
+        return result
+    }
+
+    /**
+     * Initializes V2ray configuration.
+     *
+     * This function loads the V2ray configuration from assets or from a cached value.
+     * It first attempts to use the cached configuration if available, otherwise reads
+     * the configuration from the "v2ray_config.json" asset file.
+     *
+     * @param context Android context used to access application assets
+     * @return V2rayConfig object parsed from the JSON configuration, or null if the configuration is empty
+     */
+
+    private fun initV2rayConfig(context: Context): V2rayConfig? {
+        val assets = initConfigCache ?: Utils.readTextFromAssets(context, "v2ray_config.json")
+        if (TextUtils.isEmpty(assets)) {
+            return null
+        }
+        initConfigCache = assets
+        val config = JsonUtil.fromJson(assets, V2rayConfig::class.java)
+        return config
     }
 
     private fun inbounds(v2rayConfig: V2rayConfig): Boolean {
@@ -164,7 +255,7 @@ object V2rayConfigManager {
             }
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to configure inbounds", e)
             return false
         }
         return true
@@ -227,7 +318,7 @@ object V2rayConfigManager {
                 routingUserRule(key, v2rayConfig)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to configure routing", e)
             return false
         }
         return true
@@ -244,7 +335,7 @@ object V2rayConfigManager {
             v2rayConfig.routing.rules.add(rule)
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to apply routing user rule", e)
         }
     }
 
@@ -274,7 +365,7 @@ object V2rayConfigManager {
                 val proxyDomain = userRule2Domain(TAG_PROXY)
                 val directDomain = userRule2Domain(TAG_DIRECT)
                 // fakedns with all domains to make it always top priority
-                v2rayConfig.dns.servers?.add(
+                v2rayConfig.dns?.servers?.add(
                     0,
                     V2rayConfig.DnsBean.ServersBean(
                         address = "fakedns",
@@ -330,7 +421,7 @@ object V2rayConfigManager {
                 )
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to configure custom local DNS", e)
             return false
         }
         return true
@@ -394,7 +485,7 @@ object V2rayConfigManager {
                     if (userHostsMap != null) hosts.putAll(userHostsMap)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(AppConfig.TAG, "Failed to configure user DNS hosts", e)
             }
 
             //block dns
@@ -433,7 +524,7 @@ object V2rayConfigManager {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to configure DNS", e)
             return false
         }
         return true
@@ -504,7 +595,7 @@ object V2rayConfigManager {
 
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to update outbound with global settings", e)
             return false
         }
         return true
@@ -570,7 +661,7 @@ object V2rayConfigManager {
                     dialerProxy = TAG_FRAGMENT
                 )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to update outbound fragment", e)
             return false
         }
         return true
@@ -633,7 +724,7 @@ object V2rayConfigManager {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to configure more outbounds", e)
             return returnPair
         }
 
