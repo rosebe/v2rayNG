@@ -35,11 +35,6 @@
     <string name="menu_item_import_config_manually_trojan">手動鍵入 [Trojan]</string>
     <string name="menu_item_import_config_manually_wireguard">手動鍵入 [Wireguard]</string>
     <string name="menu_item_import_config_manually_hysteria2">手動鍵入 [Hysteria2]</string>
-    <string name="menu_item_import_config_custom">自訂設定</string>
-    <string name="menu_item_import_config_custom_clipboard">從剪貼簿匯入自訂設定</string>
-    <string name="menu_item_import_config_custom_local">從本地匯入自訂設定</string>
-    <string name="menu_item_import_config_custom_url">從 URL 匯入自訂設定</string>
-    <string name="menu_item_import_config_custom_url_scan">掃描 URL 匯入自訂設定</string>
     <string name="del_config_comfirm">確定刪除？</string>
     <string name="del_invalid_config_comfirm">刪除前請先測試！確認刪除？</string>
     <string name="server_lab_remarks">備註</string>
@@ -312,6 +307,12 @@
     <string name="title_pref_fragment_length">分片包長（最小-最大）</string>
     <string name="title_pref_fragment_interval">分片間隔（最小-最大）</string>
     <string name="title_pref_fragment_enabled">啟用分片（Fragment）</string>
+
+    <string name="update_check_for_update">檢查更新</string>
+    <string name="update_already_latest_version">当前已是最新版本</string>
+    <string name="update_new_version_found">發現新版本: %s</string>
+    <string name="update_now">立即更新</string>
+    <string name="update_check_pre_release">檢查 Pre-release</string>
 
     <string-array name="share_method">
         <item>QR Code</item>
