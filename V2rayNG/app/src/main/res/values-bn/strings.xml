@@ -35,11 +35,6 @@
     <string name="menu_item_import_config_manually_trojan">ম্যানুয়ালি টাইপ করুন [Trojan]</string>
     <string name="menu_item_import_config_manually_wireguard">ম্যানুয়ালি টাইপ করুন [Wireguard]</string>
     <string name="menu_item_import_config_manually_hysteria2">Type manually[Hysteria2]</string>
-    <string name="menu_item_import_config_custom">কাস্টম কনফিগারেশন</string>
-    <string name="menu_item_import_config_custom_clipboard">ক্লিপবোর্ড থেকে কাস্টম কনফিগারেশন আমদানি করুন</string>
-    <string name="menu_item_import_config_custom_local">স্থানীয়ভাবে কাস্টম কনফিগারেশন আমদানি করুন</string>
-    <string name="menu_item_import_config_custom_url">URL থেকে কাস্টম কনফিগারেশন আমদানি করুন</string>
-    <string name="menu_item_import_config_custom_url_scan">কাস্টম কনফিগারেশন স্ক্যান URL আমদানি করুন</string>
     <string name="del_config_comfirm">মুছে ফেলুন নিশ্চিত করুন？</string>
     <string name="del_invalid_config_comfirm">Please test before deleting! Confirm delete ?</string>
     <string name="server_lab_remarks">মন্তব্য</string>
@@ -312,6 +307,12 @@
     <string name="title_pref_fragment_length">ফ্র্যাগমেন্ট দৈর্ঘ্য (ন্যূনতম-সর্বাধিক)</string>
     <string name="title_pref_fragment_interval">ফ্র্যাগমেন্ট ইন্টারভ্যাল (ন্যূনতম-সর্বাধিক)</string>
     <string name="title_pref_fragment_enabled">ফ্র্যাগমেন্ট সক্রিয় করুন</string>
+
+    <string name="update_check_for_update">Check for update</string>
+    <string name="update_already_latest_version">Already on the latest version</string>
+    <string name="update_new_version_found">New version found: %s</string>
+    <string name="update_now">Update now</string>
+    <string name="update_check_pre_release">Check Pre-release</string>
 
     <string-array name="share_method">
         <item>QR কোড</item>
