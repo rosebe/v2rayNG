@@ -286,7 +286,7 @@ object V2rayConfigManager {
 
             v2rayConfig.routing.domainStrategy =
                 MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY)
-                    ?: "IPIfNonMatch"
+                    ?: "AsIs"
 
             val rulesetItems = MmkvManager.decodeRoutingRulesets()
             rulesetItems?.forEach { key ->
@@ -861,7 +861,7 @@ object V2rayConfigManager {
             EConfigType.VLESS -> VlessFmt.toOutbound(profileItem)
             EConfigType.TROJAN -> TrojanFmt.toOutbound(profileItem)
             EConfigType.WIREGUARD -> WireguardFmt.toOutbound(profileItem)
-            EConfigType.HYSTERIA2 -> Hysteria2Fmt.toOutbound(profileItem)
+            EConfigType.HYSTERIA2 -> null
             EConfigType.HTTP -> HttpFmt.toOutbound(profileItem)
         }
     }
