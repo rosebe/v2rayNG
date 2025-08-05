@@ -1,12 +1,12 @@
 package com.v2ray.ang.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.AdapterView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +17,8 @@ import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityRoutingSettingBinding
 import com.v2ray.ang.dto.RulesetItem
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
@@ -63,15 +65,9 @@ class RoutingSettingActivity : BaseActivity() {
         mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
         mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
 
-        val found = Utils.arrayFind(routing_domain_strategy, MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY) ?: "")
-        found.let { binding.spDomainStrategy.setSelection(if (it >= 0) it else 0) }
-        binding.spDomainStrategy.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY, routing_domain_strategy[position])
-            }
+        binding.tvDomainStrategySummary.text = getDomainStrategy()
+        binding.layoutDomainStrategy.setOnClickListener {
+            setDomainStrategy()
         }
     }
 
@@ -87,12 +83,27 @@ class RoutingSettingActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.add_rule -> startActivity(Intent(this, RoutingEditActivity::class.java)).let { true }
-        R.id.user_asset_setting -> startActivity(Intent(this, UserAssetActivity::class.java)).let { true }
         R.id.import_predefined_rulesets -> importPredefined().let { true }
         R.id.import_rulesets_from_clipboard -> importFromClipboard().let { true }
         R.id.import_rulesets_from_qrcode -> requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA).let { true }
         R.id.export_rulesets_to_clipboard -> export2Clipboard().let { true }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun getDomainStrategy(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY) ?: routing_domain_strategy.first()
+    }
+
+    private fun setDomainStrategy() {
+        android.app.AlertDialog.Builder(this).setItems(routing_domain_strategy.asList().toTypedArray()) { _, i ->
+            try {
+                val value = routing_domain_strategy[i]
+                MmkvManager.encodeSettings(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY, value)
+                binding.tvDomainStrategySummary.text = value
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "Failed to set domain strategy", e)
+            }
+        }.show()
     }
 
     private fun importPredefined() {
@@ -104,11 +115,11 @@ class RoutingSettingActivity : BaseActivity() {
                             SettingsManager.resetRoutingRulesetsFromPresets(this@RoutingSettingActivity, i)
                             launch(Dispatchers.Main) {
                                 refreshData()
-                                toast(R.string.toast_success)
+                                toastSuccess(R.string.toast_success)
                             }
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(AppConfig.TAG, "Failed to import predefined ruleset", e)
                     }
                 }
                 .setNegativeButton(android.R.string.cancel) { _, _ ->
@@ -124,8 +135,8 @@ class RoutingSettingActivity : BaseActivity() {
                 val clipboard = try {
                     Utils.getClipboard(this)
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    toast(R.string.toast_failure)
+                    Log.e(AppConfig.TAG, "Failed to get clipboard content", e)
+                    toastError(R.string.toast_failure)
                     return@setPositiveButton
                 }
                 lifecycleScope.launch(Dispatchers.IO) {
@@ -133,9 +144,9 @@ class RoutingSettingActivity : BaseActivity() {
                     withContext(Dispatchers.Main) {
                         if (result) {
                             refreshData()
-                            toast(R.string.toast_success)
+                            toastSuccess(R.string.toast_success)
                         } else {
-                            toast(R.string.toast_failure)
+                            toastError(R.string.toast_failure)
                         }
                     }
                 }
@@ -149,10 +160,10 @@ class RoutingSettingActivity : BaseActivity() {
     private fun export2Clipboard() {
         val rulesetList = MmkvManager.decodeRoutingRulesets()
         if (rulesetList.isNullOrEmpty()) {
-            toast(R.string.toast_failure)
+            toastError(R.string.toast_failure)
         } else {
             Utils.setClipboard(this, JsonUtil.toJson(rulesetList))
-            toast(R.string.toast_success)
+            toastSuccess(R.string.toast_success)
         }
     }
 
@@ -170,9 +181,9 @@ class RoutingSettingActivity : BaseActivity() {
                     withContext(Dispatchers.Main) {
                         if (result) {
                             refreshData()
-                            toast(R.string.toast_success)
+                            toastSuccess(R.string.toast_success)
                         } else {
-                            toast(R.string.toast_failure)
+                            toastError(R.string.toast_failure)
                         }
                     }
                 }
@@ -184,6 +195,7 @@ class RoutingSettingActivity : BaseActivity() {
         return true
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun refreshData() {
         rulesets.clear()
         rulesets.addAll(MmkvManager.decodeRoutingRulesets() ?: mutableListOf())

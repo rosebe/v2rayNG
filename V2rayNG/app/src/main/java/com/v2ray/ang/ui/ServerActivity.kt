@@ -2,7 +2,6 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -14,13 +13,11 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import com.v2ray.ang.AppConfig
-import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.AppConfig.DEFAULT_PORT
 import com.v2ray.ang.AppConfig.PREF_ALLOW_INSECURE
 import com.v2ray.ang.AppConfig.REALITY
 import com.v2ray.ang.AppConfig.TLS
 import com.v2ray.ang.AppConfig.WIREGUARD_LOCAL_ADDRESS_V4
-import com.v2ray.ang.AppConfig.WIREGUARD_LOCAL_ADDRESS_V6
 import com.v2ray.ang.AppConfig.WIREGUARD_LOCAL_MTU
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.EConfigType
@@ -28,6 +25,7 @@ import com.v2ray.ang.dto.NetworkType
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
@@ -119,6 +117,8 @@ class ServerActivity : BaseActivity() {
     private val container_short_id: LinearLayout? by lazy { findViewById(R.id.lay_short_id) }
     private val et_spider_x: EditText? by lazy { findViewById(R.id.et_spider_x) }
     private val container_spider_x: LinearLayout? by lazy { findViewById(R.id.lay_spider_x) }
+    private val et_mldsa65_verify: EditText? by lazy { findViewById(R.id.et_mldsa65_verify) }
+    private val container_mldsa65_verify: LinearLayout? by lazy { findViewById(R.id.lay_mldsa65_verify) }
     private val et_reserved1: EditText? by lazy { findViewById(R.id.et_reserved1) }
     private val et_local_address: EditText? by lazy { findViewById(R.id.et_local_address) }
     private val et_local_mtu: EditText? by lazy { findViewById(R.id.et_local_mtu) }
@@ -255,9 +255,14 @@ class ServerActivity : BaseActivity() {
                     // Case 1: Null or blank
                     isBlank -> {
                         listOf(
-                            container_sni, container_fingerprint, container_alpn,
-                            container_allow_insecure, container_public_key,
-                            container_short_id, container_spider_x
+                            container_sni,
+                            container_fingerprint,
+                            container_alpn,
+                            container_allow_insecure,
+                            container_public_key,
+                            container_short_id,
+                            container_spider_x,
+                            container_mldsa65_verify
                         ).forEach { it?.visibility = View.GONE }
                     }
 
@@ -272,7 +277,8 @@ class ServerActivity : BaseActivity() {
                         listOf(
                             container_public_key,
                             container_short_id,
-                            container_spider_x
+                            container_spider_x,
+                            container_mldsa65_verify
                         ).forEach { it?.visibility = View.GONE }
                     }
 
@@ -286,7 +292,8 @@ class ServerActivity : BaseActivity() {
                         listOf(
                             container_public_key,
                             container_short_id,
-                            container_spider_x
+                            container_spider_x,
+                            container_mldsa65_verify
                         ).forEach { it?.visibility = View.VISIBLE }
                     }
                 }
@@ -328,7 +335,7 @@ class ServerActivity : BaseActivity() {
             et_preshared_key?.text = Utils.getEditable(config.preSharedKey.orEmpty())
             et_reserved1?.text = Utils.getEditable(config.reserved ?: "0,0,0")
             et_local_address?.text = Utils.getEditable(
-                config.localAddress ?: "$WIREGUARD_LOCAL_ADDRESS_V4,$WIREGUARD_LOCAL_ADDRESS_V6"
+                config.localAddress ?: WIREGUARD_LOCAL_ADDRESS_V4
             )
             et_local_mtu?.text = Utils.getEditable(config.mtu?.toString() ?: WIREGUARD_LOCAL_MTU)
         } else if (config.configType == EConfigType.HYSTERIA2) {
@@ -354,11 +361,11 @@ class ServerActivity : BaseActivity() {
             container_alpn?.visibility = View.VISIBLE
 
             et_sni?.text = Utils.getEditable(config.sni)
-            config.fingerPrint?.let {
+            config.fingerPrint?.let { it ->
                 val utlsIndex = Utils.arrayFind(uTlsItems, it)
                 utlsIndex.let { sp_stream_fingerprint?.setSelection(if (it >= 0) it else 0) }
             }
-            config.alpn?.let {
+            config.alpn?.let { it ->
                 val alpnIndex = Utils.arrayFind(alpns, it)
                 alpnIndex.let { sp_stream_alpn?.setSelection(if (it >= 0) it else 0) }
             }
@@ -368,9 +375,12 @@ class ServerActivity : BaseActivity() {
                 if (allowinsecure >= 0) {
                     sp_allow_insecure?.setSelection(allowinsecure)
                 }
-                container_public_key?.visibility = View.GONE
-                container_short_id?.visibility = View.GONE
-                container_spider_x?.visibility = View.GONE
+                listOf(
+                    container_public_key,
+                    container_short_id,
+                    container_spider_x,
+                    container_mldsa65_verify
+                ).forEach { it?.visibility = View.GONE }
             } else if (config.security == REALITY) {
                 container_public_key?.visibility = View.VISIBLE
                 et_public_key?.text = Utils.getEditable(config.publicKey.orEmpty())
@@ -378,18 +388,23 @@ class ServerActivity : BaseActivity() {
                 et_short_id?.text = Utils.getEditable(config.shortId.orEmpty())
                 container_spider_x?.visibility = View.VISIBLE
                 et_spider_x?.text = Utils.getEditable(config.spiderX.orEmpty())
+                container_mldsa65_verify?.visibility = View.VISIBLE
+                et_mldsa65_verify?.text = Utils.getEditable(config.mldsa65Verify.orEmpty())
                 container_allow_insecure?.visibility = View.GONE
             }
         }
 
         if (config.security.isNullOrEmpty()) {
-            container_sni?.visibility = View.GONE
-            container_fingerprint?.visibility = View.GONE
-            container_alpn?.visibility = View.GONE
-            container_allow_insecure?.visibility = View.GONE
-            container_public_key?.visibility = View.GONE
-            container_short_id?.visibility = View.GONE
-            container_spider_x?.visibility = View.GONE
+            listOf(
+                container_sni,
+                container_fingerprint,
+                container_alpn,
+                container_allow_insecure,
+                container_public_key,
+                container_short_id,
+                container_spider_x,
+                container_mldsa65_verify
+            ).forEach { it?.visibility = View.GONE }
         }
         val network = Utils.arrayFind(networks, config.network.orEmpty())
         if (network >= 0) {
@@ -421,7 +436,7 @@ class ServerActivity : BaseActivity() {
         et_public_key?.text = null
         et_reserved1?.text = Utils.getEditable("0,0,0")
         et_local_address?.text =
-            Utils.getEditable("${WIREGUARD_LOCAL_ADDRESS_V4},${WIREGUARD_LOCAL_ADDRESS_V6}")
+            Utils.getEditable(WIREGUARD_LOCAL_ADDRESS_V4)
         et_local_mtu?.text = Utils.getEditable(WIREGUARD_LOCAL_MTU)
         return true
     }
@@ -480,9 +495,9 @@ class ServerActivity : BaseActivity() {
         if (config.subscriptionId.isEmpty() && !subscriptionId.isNullOrEmpty()) {
             config.subscriptionId = subscriptionId.orEmpty()
         }
-        Log.d(ANG_PACKAGE, JsonUtil.toJsonPretty(config) ?: "")
+        //Log.i(AppConfig.TAG, JsonUtil.toJsonPretty(config) ?: "")
         MmkvManager.encodeServerConfig(editGuid, config)
-        toast(R.string.toast_success)
+        toastSuccess(R.string.toast_success)
         finish()
         return true
     }
@@ -552,6 +567,7 @@ class ServerActivity : BaseActivity() {
         val publicKey = et_public_key?.text?.toString()
         val shortId = et_short_id?.text?.toString()
         val spiderX = et_spider_x?.text?.toString()
+        val mldsa65Verify = et_mldsa65_verify?.text?.toString()
 
         val allowInsecure =
             if (allowInsecureField == null || allowinsecures[allowInsecureField].isBlank()) {
@@ -568,6 +584,7 @@ class ServerActivity : BaseActivity() {
         config.publicKey = publicKey
         config.shortId = shortId
         config.spiderX = spiderX
+        config.mldsa65Verify = mldsa65Verify
     }
 
     private fun transportTypes(network: String?): Array<out String> {

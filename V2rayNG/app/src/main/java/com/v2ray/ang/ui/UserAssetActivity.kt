@@ -21,11 +21,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
-import com.v2ray.ang.databinding.ActivitySubSettingBinding
+import com.v2ray.ang.databinding.ActivityUserAssetBinding
 import com.v2ray.ang.databinding.ItemRecyclerUserAssetBinding
 import com.v2ray.ang.dto.AssetUrlItem
+import com.v2ray.ang.extension.concatUrl
 import com.v2ray.ang.extension.toTrafficString
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.HttpUtil
@@ -40,7 +43,7 @@ import java.text.DateFormat
 import java.util.Date
 
 class UserAssetActivity : BaseActivity() {
-    private val binding by lazy { ActivitySubSettingBinding.inflate(layoutInflater) }
+    private val binding by lazy { ActivityUserAssetBinding.inflate(layoutInflater) }
 
     val extDir by lazy { File(Utils.userAssetPath(this)) }
     val builtInGeoFiles = arrayOf("geosite.dat", "geoip.dat")
@@ -87,11 +90,16 @@ class UserAssetActivity : BaseActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
         binding.recyclerView.adapter = UserAssetAdapter()
+
+        binding.tvGeoFilesSourcesSummary.text = getGeoFilesSources()
+        binding.layoutGeoFilesSources.setOnClickListener {
+            setGeoFilesSources()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        binding.recyclerView.adapter?.notifyDataSetChanged()
+        refreshData()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -108,6 +116,22 @@ class UserAssetActivity : BaseActivity() {
         else -> super.onOptionsItemSelected(item)
     }
 
+    private fun getGeoFilesSources(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_GEO_FILES_SOURCES) ?: AppConfig.GEO_FILES_SOURCES.first()
+    }
+
+    private fun setGeoFilesSources() {
+        AlertDialog.Builder(this).setItems(AppConfig.GEO_FILES_SOURCES.toTypedArray()) { _, i ->
+            try {
+                val value = AppConfig.GEO_FILES_SOURCES[i]
+                MmkvManager.encodeSettings(AppConfig.PREF_GEO_FILES_SOURCES, value)
+                binding.tvGeoFilesSourcesSummary.text = value
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "Failed to set geo files sources", e)
+            }
+        }.show()
+    }
+
     private fun showFileChooser() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
@@ -117,7 +141,7 @@ class UserAssetActivity : BaseActivity() {
         requestStoragePermissionLauncher.launch(permission)
     }
 
-    val chooseFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val chooseFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val uri = result.data?.data
         if (result.resultCode == RESULT_OK && uri != null) {
             val assetId = Utils.getUuid()
@@ -135,7 +159,7 @@ class UserAssetActivity : BaseActivity() {
                     copyFile(uri)
                 }
             }.onFailure {
-                toast(R.string.toast_asset_copy_failed)
+                toastError(R.string.toast_asset_copy_failed)
                 MmkvManager.removeAssetUrl(assetId)
             }
         }
@@ -146,8 +170,8 @@ class UserAssetActivity : BaseActivity() {
         contentResolver.openInputStream(uri).use { inputStream ->
             targetFile.outputStream().use { fileOut ->
                 inputStream?.copyTo(fileOut)
-                toast(R.string.toast_success)
-                binding.recyclerView.adapter?.notifyDataSetChanged()
+                toastSuccess(R.string.toast_success)
+                refreshData()
             }
         }
         return targetFile.path
@@ -161,7 +185,7 @@ class UserAssetActivity : BaseActivity() {
             }.also { cursor.close() }
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.e(AppConfig.TAG, "Failed to get cursor name", e)
         null
     }
 
@@ -188,7 +212,7 @@ class UserAssetActivity : BaseActivity() {
                     .putExtra(UserAssetUrlActivity.ASSET_URL_QRCODE, url)
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to import asset from URL", e)
             return false
         }
         return true
@@ -205,17 +229,21 @@ class UserAssetActivity : BaseActivity() {
         var resultCount = 0
         lifecycleScope.launch(Dispatchers.IO) {
             assets.forEach {
-                var result = downloadGeo(it.second, 15000, httpPort)
-                if (!result) {
-                    result = downloadGeo(it.second, 15000, 0)
+                try {
+                    var result = downloadGeo(it.second, 15000, httpPort)
+                    if (!result) {
+                        result = downloadGeo(it.second, 15000, 0)
+                    }
+                    if (result)
+                        resultCount++
+                } catch (e: Exception) {
+                    Log.e(AppConfig.TAG, "Failed to download geo file: ${it.second.remarks}", e)
                 }
-                if (result)
-                    resultCount++
             }
             withContext(Dispatchers.Main) {
                 if (resultCount > 0) {
                     toast(getString(R.string.title_update_config_count, resultCount))
-                    binding.recyclerView.adapter?.notifyDataSetChanged()
+                    refreshData()
                 } else {
                     toast(getString(R.string.toast_failure))
                 }
@@ -227,7 +255,7 @@ class UserAssetActivity : BaseActivity() {
     private fun downloadGeo(item: AssetUrlItem, timeout: Int, httpPort: Int): Boolean {
         val targetTemp = File(extDir, item.remarks + "_temp")
         val target = File(extDir, item.remarks)
-        //Log.d(AppConfig.ANG_PACKAGE, url)
+        Log.i(AppConfig.TAG, "Downloading geo file: ${item.remarks} from ${item.url}")
 
         val conn = HttpUtil.createProxyConnection(item.url, httpPort, timeout, timeout, needStream = true) ?: return false
         try {
@@ -242,10 +270,10 @@ class UserAssetActivity : BaseActivity() {
             }
             return true
         } catch (e: Exception) {
-            Log.e(AppConfig.ANG_PACKAGE, Log.getStackTraceString(e))
+            Log.e(AppConfig.TAG, "Failed to download geo file: ${item.remarks}", e)
             return false
         } finally {
-            conn?.disconnect()
+            conn.disconnect()
         }
     }
 
@@ -257,7 +285,8 @@ class UserAssetActivity : BaseActivity() {
                 list.add(
                     Utils.getUuid() to AssetUrlItem(
                         it,
-                        AppConfig.GeoUrl + it
+                        String.format(AppConfig.GITHUB_DOWNLOAD_URL, getGeoFilesSources()).concatUrl(it),
+                        locked = true
                     )
                 )
             }
@@ -269,9 +298,14 @@ class UserAssetActivity : BaseActivity() {
         lifecycleScope.launch(Dispatchers.Default) {
             SettingsManager.initAssets(this@UserAssetActivity, assets)
             withContext(Dispatchers.Main) {
-                binding.recyclerView.adapter?.notifyDataSetChanged()
+                refreshData()
             }
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun refreshData() {
+        binding.recyclerView.adapter?.notifyDataSetChanged()
     }
 
     inner class UserAssetAdapter : RecyclerView.Adapter<UserAssetViewHolder>() {
@@ -303,7 +337,7 @@ class UserAssetActivity : BaseActivity() {
                 holder.itemUserAssetBinding.assetProperties.text = getString(R.string.msg_file_not_found)
             }
 
-            if (item.second.remarks in builtInGeoFiles && item.second.url == AppConfig.GeoUrl + item.second.remarks) {
+            if (item.second.locked == true) {
                 holder.itemUserAssetBinding.layoutEdit.visibility = GONE
                 //holder.itemUserAssetBinding.layoutRemove.visibility = GONE
             } else {

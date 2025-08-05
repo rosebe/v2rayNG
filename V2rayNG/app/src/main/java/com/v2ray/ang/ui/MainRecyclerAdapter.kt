@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.graphics.Color
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,11 +20,14 @@ import com.v2ray.ang.databinding.ItemRecyclerMainBinding
 import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
-import com.v2ray.ang.service.V2RayServiceManager
+import com.v2ray.ang.handler.V2RayServiceManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -43,6 +47,10 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     var isRunning = false
     private val doubleColumnDisplay = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)
 
+    /**
+     * Gets the total number of items in the adapter (servers count + footer view)
+     * @return The total item count
+     */
     override fun getItemCount() = mActivity.mainViewModel.serversCache.size + 1
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
@@ -128,6 +136,12 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 //        }
     }
 
+    /**
+     * Gets the server address information
+     * Hides part of IP or domain information for privacy protection
+     * @param profile The server configuration
+     * @return Formatted address string
+     */
     private fun getAddress(profile: ProfileItem): String {
         // Hide xxx:xxx:***/xxx.xxx.xxx.***
         return "${
@@ -140,6 +154,11 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         } : ${profile.serverPort}"
     }
 
+    /**
+     * Gets the subscription remarks information
+     * @param profile The server configuration
+     * @return Subscription remarks string, or empty string if none
+     */
     private fun getSubscriptionRemarks(profile: ProfileItem): String {
         val subRemarks =
             if (mActivity.mainViewModel.subscriptionId.isEmpty())
@@ -149,6 +168,15 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         return subRemarks?.toString() ?: ""
     }
 
+    /**
+     * Shares server configuration
+     * Displays a dialog with sharing options and executes the selected action
+     * @param guid The server unique identifier
+     * @param profile The server configuration
+     * @param position The position in the list
+     * @param shareOptions The list of share options
+     * @param skip The number of options to skip
+     */
     private fun shareServer(guid: String, profile: ProfileItem, position: Int, shareOptions: List<String>, skip: Int) {
         AlertDialog.Builder(mActivity).setItems(shareOptions.toTypedArray()) { _, i ->
             try {
@@ -161,33 +189,56 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                     else -> mActivity.toast("else")
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(AppConfig.TAG, "Error when sharing server", e)
             }
         }.show()
     }
 
+    /**
+     * Displays QR code for the server configuration
+     * @param guid The server unique identifier
+     */
     private fun showQRCode(guid: String) {
         val ivBinding = ItemQrcodeBinding.inflate(LayoutInflater.from(mActivity))
         ivBinding.ivQcode.setImageBitmap(AngConfigManager.share2QRCode(guid))
         AlertDialog.Builder(mActivity).setView(ivBinding.root).show()
     }
 
+    /**
+     * Shares server configuration to clipboard
+     * @param guid The server unique identifier
+     */
     private fun share2Clipboard(guid: String) {
         if (AngConfigManager.share2Clipboard(mActivity, guid) == 0) {
-            mActivity.toast(R.string.toast_success)
+            mActivity.toastSuccess(R.string.toast_success)
         } else {
-            mActivity.toast(R.string.toast_failure)
+            mActivity.toastError(R.string.toast_failure)
         }
     }
 
+    /**
+     * Shares full server configuration content to clipboard
+     * @param guid The server unique identifier
+     */
     private fun shareFullContent(guid: String) {
-        if (AngConfigManager.shareFullContent2Clipboard(mActivity, guid) == 0) {
-            mActivity.toast(R.string.toast_success)
-        } else {
-            mActivity.toast(R.string.toast_failure)
+        mActivity.lifecycleScope.launch(Dispatchers.IO) {
+            val result = AngConfigManager.shareFullContent2Clipboard(mActivity, guid)
+            launch(Dispatchers.Main) {
+                if (result == 0) {
+                    mActivity.toastSuccess(R.string.toast_success)
+                } else {
+                    mActivity.toastError(R.string.toast_failure)
+                }
+            }
         }
     }
 
+    /**
+     * Edits server configuration
+     * Opens appropriate editing interface based on configuration type
+     * @param guid The server unique identifier
+     * @param profile The server configuration
+     */
     private fun editServer(guid: String, profile: ProfileItem) {
         val intent = Intent().putExtra("guid", guid)
             .putExtra("isRunning", isRunning)
@@ -199,6 +250,12 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }
     }
 
+    /**
+     * Removes server configuration
+     * Handles confirmation dialog and related checks
+     * @param guid The server unique identifier
+     * @param position The position in the list
+     */
     private fun removeServer(guid: String, position: Int) {
         if (guid != MmkvManager.getSelectServer()) {
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE) == true) {
@@ -218,12 +275,22 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }
     }
 
+    /**
+     * Executes the actual server removal process
+     * @param guid The server unique identifier
+     * @param position The position in the list
+     */
     private fun removeServerSub(guid: String, position: Int) {
         mActivity.mainViewModel.removeServer(guid)
         notifyItemRemoved(position)
         notifyItemRangeChanged(position, mActivity.mainViewModel.serversCache.size)
     }
 
+    /**
+     * Sets the selected server
+     * Updates UI and restarts service if needed
+     * @param guid The server unique identifier to select
+     */
     private fun setSelectServer(guid: String) {
         val selected = MmkvManager.getSelectServer()
         if (guid != selected) {
@@ -239,7 +306,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                         delay(500)
                         V2RayServiceManager.startVService(mActivity)
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(AppConfig.TAG, "Failed to restart V2Ray service", e)
                     }
                 }
             }

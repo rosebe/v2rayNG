@@ -18,7 +18,7 @@ import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.toLongEx
 import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.service.SubscriptionUpdater
+import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.SettingsViewModel
 import java.util.concurrent.TimeUnit
@@ -44,6 +44,7 @@ class SettingsActivity : BaseActivity() {
         private val localDnsPort by lazy { findPreference<EditTextPreference>(AppConfig.PREF_LOCAL_DNS_PORT) }
         private val vpnDns by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_DNS) }
         private val vpnBypassLan by lazy { findPreference<ListPreference>(AppConfig.PREF_VPN_BYPASS_LAN) }
+        private val vpnInterfaceAddress by lazy { findPreference<ListPreference>(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX) }
 
         private val mux by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_MUX_ENABLED) }
         private val muxConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_CONCURRENCY) }
@@ -161,7 +162,7 @@ class SettingsActivity : BaseActivity() {
             }
             delayTestUrl?.setOnPreferenceChangeListener { _, any ->
                 val nval = any as String
-                delayTestUrl?.summary = if (nval == "") AppConfig.DelayTestUrl else nval
+                delayTestUrl?.summary = if (nval == "") AppConfig.DELAY_TEST_URL else nval
                 true
             }
             mode?.setOnPreferenceChangeListener { _, newValue ->
@@ -202,7 +203,7 @@ class SettingsActivity : BaseActivity() {
             remoteDns?.summary = MmkvManager.decodeSettingsString(AppConfig.PREF_REMOTE_DNS, AppConfig.DNS_PROXY)
             domesticDns?.summary = MmkvManager.decodeSettingsString(AppConfig.PREF_DOMESTIC_DNS, AppConfig.DNS_DIRECT)
             dnsHosts?.summary = MmkvManager.decodeSettingsString(AppConfig.PREF_DNS_HOSTS)
-            delayTestUrl?.summary = MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL, AppConfig.DelayTestUrl)
+            delayTestUrl?.summary = MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL, AppConfig.DELAY_TEST_URL)
 
             initSharedPreference()
         }
@@ -241,7 +242,8 @@ class SettingsActivity : BaseActivity() {
                 AppConfig.PREF_DOUBLE_COLUMN_DISPLAY,
                 AppConfig.PREF_PREFER_IPV6,
                 AppConfig.PREF_PROXY_SHARING,
-                AppConfig.PREF_ALLOW_INSECURE
+                AppConfig.PREF_ALLOW_INSECURE,
+                AppConfig.PREF_USE_HEV_TUNNEL
             ).forEach { key ->
                 findPreference<CheckBoxPreference>(key)?.isChecked =
                     MmkvManager.decodeSettingsBool(key, false)
@@ -249,12 +251,15 @@ class SettingsActivity : BaseActivity() {
 
             listOf(
                 AppConfig.PREF_VPN_BYPASS_LAN,
+                AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX,
                 AppConfig.PREF_ROUTING_DOMAIN_STRATEGY,
                 AppConfig.PREF_MUX_XUDP_QUIC,
                 AppConfig.PREF_FRAGMENT_PACKETS,
                 AppConfig.PREF_LANGUAGE,
                 AppConfig.PREF_UI_MODE_NIGHT,
                 AppConfig.PREF_LOGLEVEL,
+                AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD,
+                AppConfig.PREF_INTELLIGENT_SELECTION_METHOD,
                 AppConfig.PREF_MODE
             ).forEach { key ->
                 if (MmkvManager.decodeSettingsString(key) != null) {
@@ -273,7 +278,7 @@ class SettingsActivity : BaseActivity() {
             localDnsPort?.isEnabled = vpn
             vpnDns?.isEnabled = vpn
             vpnBypassLan?.isEnabled = vpn
-            vpn
+            vpnInterfaceAddress?.isEnabled = vpn
             if (vpn) {
                 updateLocalDns(
                     MmkvManager.decodeSettingsBool(
@@ -364,6 +369,6 @@ class SettingsActivity : BaseActivity() {
     }
 
     fun onModeHelpClicked(view: View) {
-        Utils.openUri(this, AppConfig.v2rayNGWikiMode)
+        Utils.openUri(this, AppConfig.APP_WIKI_MODE)
     }
 }

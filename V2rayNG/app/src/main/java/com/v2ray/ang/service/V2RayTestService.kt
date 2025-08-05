@@ -9,10 +9,10 @@ import com.v2ray.ang.AppConfig.MSG_MEASURE_CONFIG_SUCCESS
 import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.extension.serializable
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.PluginServiceManager
 import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.util.MessageUtil
-import com.v2ray.ang.util.PluginUtil
 import com.v2ray.ang.util.Utils
 import go.Seq
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +32,7 @@ class V2RayTestService : Service() {
     override fun onCreate() {
         super.onCreate()
         Seq.setContext(this)
-        Libv2ray.initV2Env(Utils.userAssetPath(this), Utils.getDeviceIdForXUDPBaseKey())
+        Libv2ray.initCoreEnv(Utils.userAssetPath(this), Utils.getDeviceIdForXUDPBaseKey())
     }
 
     /**
@@ -78,14 +78,14 @@ class V2RayTestService : Service() {
 
         val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
         if (config.configType == EConfigType.HYSTERIA2) {
-            val delay = PluginUtil.realPingHy2(this, config)
+            val delay = PluginServiceManager.realPingHy2(this, config)
             return delay
         } else {
-            val config = V2rayConfigManager.getV2rayConfig(this, guid)
-            if (!config.status) {
+            val configResult = V2rayConfigManager.getV2rayConfig4Speedtest(this, guid)
+            if (!configResult.status) {
                 return retFailure
             }
-            return SpeedtestManager.realPing(config.content)
+            return SpeedtestManager.realPing(configResult.content)
         }
     }
 }

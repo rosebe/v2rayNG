@@ -6,8 +6,10 @@ import android.text.TextUtils
 import android.util.Log
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.dto.IPAPIInfo
 import com.v2ray.ang.extension.responseLength
 import com.v2ray.ang.util.HttpUtil
+import com.v2ray.ang.util.JsonUtil
 import kotlinx.coroutines.isActive
 import libv2ray.Libv2ray
 import java.io.IOException
@@ -51,7 +53,7 @@ object SpeedtestManager {
         return try {
             Libv2ray.measureOutboundDelay(config, SettingsManager.getDelayTestUrl())
         } catch (e: Exception) {
-            Log.d(AppConfig.ANG_PACKAGE, "realPing: $e")
+            Log.e(AppConfig.TAG, "Failed to measure outbound delay", e)
             -1L
         }
     }
@@ -76,7 +78,7 @@ object SpeedtestManager {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to ping URL: $url", e)
         }
         return "-1ms"
     }
@@ -103,11 +105,11 @@ object SpeedtestManager {
             socket.close()
             return time
         } catch (e: UnknownHostException) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Unknown host: $url", e)
         } catch (e: IOException) {
-            Log.d(AppConfig.ANG_PACKAGE, "socketConnectTime IOException: $e")
+            Log.e(AppConfig.TAG, "socketConnectTime IOException: $e")
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to establish socket connection to $url:$port", e)
         }
         return -1
     }
@@ -152,16 +154,27 @@ object SpeedtestManager {
                 )
             }
         } catch (e: IOException) {
-            Log.d(AppConfig.ANG_PACKAGE, "testConnection IOException: " + Log.getStackTraceString(e))
+            Log.e(AppConfig.TAG, "Connection test IOException", e)
             result = context.getString(R.string.connection_test_error, e.message)
         } catch (e: Exception) {
-            Log.d(AppConfig.ANG_PACKAGE, "testConnection Exception: " + Log.getStackTraceString(e))
+            Log.e(AppConfig.TAG, "Connection test Exception", e)
             result = context.getString(R.string.connection_test_error, e.message)
         } finally {
-            conn?.disconnect()
+            conn.disconnect()
         }
 
         return Pair(elapsed, result)
+    }
+
+    fun getRemoteIPInfo(): String? {
+        val httpPort = SettingsManager.getHttpPort()
+        var content = HttpUtil.getUrlContent(AppConfig.IP_API_URL, 5000, httpPort) ?: return null
+
+        var ipInfo = JsonUtil.fromJson(content, IPAPIInfo::class.java) ?: return null
+        var ip = ipInfo.ip ?: ipInfo.clientIp ?: ipInfo.ip_addr ?: ipInfo.query
+        var country = ipInfo.country_code ?: ipInfo.country ?: ipInfo.countryCode
+
+        return "(${country ?: "unknown"}) $ip"
     }
 
     /**

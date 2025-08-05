@@ -2,13 +2,16 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
+import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityUserAssetUrlBinding
 import com.v2ray.ang.dto.AssetUrlItem
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.util.Utils
 import java.io.File
@@ -21,10 +24,10 @@ class UserAssetUrlActivity : BaseActivity() {
 
     private val binding by lazy { ActivityUserAssetUrlBinding.inflate(layoutInflater) }
 
-    var del_config: MenuItem? = null
-    var save_config: MenuItem? = null
+    private var del_config: MenuItem? = null
+    private var save_config: MenuItem? = null
 
-    val extDir by lazy { File(Utils.userAssetPath(this)) }
+    private val extDir by lazy { File(Utils.userAssetPath(this)) }
     private val editAssetId by lazy { intent.getStringExtra("assetId").orEmpty() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +44,7 @@ class UserAssetUrlActivity : BaseActivity() {
                 binding.etRemarks.setText(assetNameQrcode)
                 binding.etUrl.setText(assetUrlQrcode)
             }
+
             else -> clearAsset()
         }
     }
@@ -73,7 +77,11 @@ class UserAssetUrlActivity : BaseActivity() {
             // remove file associated with the asset
             val file = extDir.resolve(assetItem.remarks)
             if (file.exists()) {
-                file.delete()
+                try {
+                    file.delete()
+                } catch (e: Exception) {
+                    Log.e(AppConfig.TAG, "Failed to delete asset file: ${file.path}", e)
+                }
             }
         } else {
             assetId = Utils.getUuid()
@@ -101,7 +109,7 @@ class UserAssetUrlActivity : BaseActivity() {
         }
 
         MmkvManager.encodeAsset(assetId, assetItem)
-        toast(R.string.toast_success)
+        toastSuccess(R.string.toast_success)
         finish()
         return true
     }

@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
 import com.v2ray.ang.AppConfig
-import com.v2ray.ang.service.V2RayServiceManager
+import com.v2ray.ang.handler.V2RayServiceManager
 
 class TaskerReceiver : BroadcastReceiver() {
 
@@ -35,7 +35,7 @@ class TaskerReceiver : BroadcastReceiver() {
                 V2RayServiceManager.stopVService(context)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e(AppConfig.TAG, "Error processing Tasker broadcast", e)
         }
     }
 }

@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -28,7 +29,7 @@ class TaskerActivity : BaseActivity() {
         lstData.add("Default")
         lstGuid.add(AppConfig.TASKER_DEFAULT_GUID)
 
-        MmkvManager.decodeServerList()?.forEach { key ->
+        MmkvManager.decodeServerList().forEach { key ->
             MmkvManager.decodeServerConfig(key)?.let { config ->
                 lstData.add(config.remarks)
                 lstGuid.add(key)
@@ -60,7 +61,7 @@ class TaskerActivity : BaseActivity() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to initialize Tasker settings", e)
 
         }
     }

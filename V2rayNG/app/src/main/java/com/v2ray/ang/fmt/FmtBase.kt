@@ -4,6 +4,8 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.NetworkType
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.extension.isNotNullEmpty
+import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.Utils
 import java.net.URI
 
@@ -18,15 +20,15 @@ open class FmtBase {
      */
     fun toUri(config: ProfileItem, userInfo: String?, dicQuery: HashMap<String, String>?): String {
         val query = if (dicQuery != null)
-            ("?" + dicQuery.toList().joinToString(
+            "?" + dicQuery.toList().joinToString(
                 separator = "&",
-                transform = { it.first + "=" + Utils.urlEncode(it.second) }))
+                transform = { it.first + "=" + Utils.urlEncode(it.second) })
         else ""
 
         val url = String.format(
             "%s@%s:%s",
             Utils.urlEncode(userInfo ?: ""),
-            Utils.getIpv6Address(config.server),
+            Utils.getIpv6Address(HttpUtil.toIdnDomain(config.server.orEmpty())),
             config.serverPort
         )
 
@@ -81,6 +83,7 @@ open class FmtBase {
         config.publicKey = queryParam["pbk"]
         config.shortId = queryParam["sid"]
         config.spiderX = queryParam["spx"]
+        config.mldsa65Verify = queryParam["pqv"]
         config.flow = queryParam["flow"]
     }
 
@@ -99,6 +102,7 @@ open class FmtBase {
         config.publicKey.let { if (it.isNotNullEmpty()) dicQuery["pbk"] = it.orEmpty() }
         config.shortId.let { if (it.isNotNullEmpty()) dicQuery["sid"] = it.orEmpty() }
         config.spiderX.let { if (it.isNotNullEmpty()) dicQuery["spx"] = it.orEmpty() }
+        config.mldsa65Verify.let { if (it.isNotNullEmpty()) dicQuery["pqv"] = it.orEmpty() }
         config.flow.let { if (it.isNotNullEmpty()) dicQuery["flow"] = it.orEmpty() }
 
         val networkType = NetworkType.fromString(config.network)
@@ -120,7 +124,7 @@ open class FmtBase {
                 config.path.let { if (it.isNotNullEmpty()) dicQuery["path"] = it.orEmpty() }
             }
 
-             NetworkType.XHTTP -> {
+            NetworkType.XHTTP -> {
                 config.host.let { if (it.isNotNullEmpty()) dicQuery["host"] = it.orEmpty() }
                 config.path.let { if (it.isNotNullEmpty()) dicQuery["path"] = it.orEmpty() }
                 config.xhttpMode.let { if (it.isNotNullEmpty()) dicQuery["mode"] = it.orEmpty() }
@@ -147,5 +151,22 @@ open class FmtBase {
         }
 
         return dicQuery
+    }
+
+    fun getServerAddress(profileItem: ProfileItem): String {
+        if (Utils.isPureIpAddress(profileItem.server.orEmpty())) {
+            return profileItem.server.orEmpty()
+        }
+
+        val domain = HttpUtil.toIdnDomain(profileItem.server.orEmpty())
+        if (MmkvManager.decodeSettingsString(AppConfig.PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD, "1") != "2") {
+            return domain
+        }
+        //Resolve and replace domain
+        val resolvedIps = HttpUtil.resolveHostToIP(domain, MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6))
+        if (resolvedIps.isNullOrEmpty()) {
+            return domain
+        }
+        return resolvedIps.first()
     }
 }

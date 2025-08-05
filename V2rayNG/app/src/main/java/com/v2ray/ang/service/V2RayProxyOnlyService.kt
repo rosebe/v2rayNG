@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.MyContextWrapper
 import java.lang.ref.SoftReference
 
@@ -27,7 +28,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * @return The start mode.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        V2RayServiceManager.startV2rayPoint()
+        V2RayServiceManager.startCoreLoop()
         return START_STICKY
     }
 
@@ -36,7 +37,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      */
     override fun onDestroy() {
         super.onDestroy()
-        V2RayServiceManager.stopV2rayPoint()
+        V2RayServiceManager.stopCoreLoop()
     }
 
     /**

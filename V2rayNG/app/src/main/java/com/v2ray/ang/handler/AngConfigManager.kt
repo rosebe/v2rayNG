@@ -7,7 +7,9 @@ import android.util.Log
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.HY2
 import com.v2ray.ang.R
-import com.v2ray.ang.dto.*
+import com.v2ray.ang.dto.EConfigType
+import com.v2ray.ang.dto.ProfileItem
+import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
 import com.v2ray.ang.fmt.ShadowsocksFmt
@@ -42,7 +44,7 @@ object AngConfigManager {
             Utils.setClipboard(context, conf)
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to share config to clipboard", e)
             return -1
         }
         return 0
@@ -69,9 +71,9 @@ object AngConfigManager {
             if (sb.count() > 0) {
                 Utils.setClipboard(context, sb.toString())
             }
-            return sb.lines().count()
+            return sb.lines().count() - 1
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to share non-custom configs to clipboard", e)
             return -1
         }
     }
@@ -91,7 +93,7 @@ object AngConfigManager {
             return QRCodeDecoder.createQRCode(conf)
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to share config as QR code", e)
             return null
         }
     }
@@ -120,7 +122,7 @@ object AngConfigManager {
                 return -1
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to share full content to clipboard", e)
             return -1
         }
         return 0
@@ -148,7 +150,7 @@ object AngConfigManager {
                 EConfigType.HYSTERIA2 -> Hysteria2Fmt.toUri(config)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to share config for GUID: $guid", e)
             return ""
         }
     }
@@ -203,7 +205,7 @@ object AngConfigManager {
                 }
             return count
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to parse batch subscription", e)
         }
         return 0
     }
@@ -251,7 +253,7 @@ object AngConfigManager {
                 }
             return count
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to parse batch config", e)
         }
         return 0
     }
@@ -287,7 +289,7 @@ object AngConfigManager {
                     return count
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(AppConfig.TAG, "Failed to parse custom config server JSON array", e)
             }
 
             try {
@@ -298,7 +300,7 @@ object AngConfigManager {
                 MmkvManager.encodeServerRaw(key, server)
                 return 1
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(AppConfig.TAG, "Failed to parse custom config server as single config", e)
             }
             return 0
         } else if (server.startsWith("[Interface]") && server.contains("[Peer]")) {
@@ -308,7 +310,7 @@ object AngConfigManager {
                 MmkvManager.encodeServerRaw(key, server)
                 return 1
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(AppConfig.TAG, "Failed to parse WireGuard config file", e)
             }
             return 0
         } else {
@@ -372,7 +374,7 @@ object AngConfigManager {
                 MmkvManager.setSelectServer(guid)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to parse config", e)
             return -1
         }
         return 0
@@ -390,7 +392,7 @@ object AngConfigManager {
                 count += updateConfigViaSub(it)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to update config via all subscriptions", e)
             return 0
         }
         return count
@@ -413,25 +415,29 @@ object AngConfigManager {
             if (!it.second.enabled) {
                 return 0
             }
-            val url = HttpUtil.idnToASCII(it.second.url)
+            val url = HttpUtil.toIdnUrl(it.second.url)
             if (!Utils.isValidUrl(url)) {
                 return 0
             }
-            Log.d(AppConfig.ANG_PACKAGE, url)
+            if (!it.second.allowInsecureUrl) {
+                if (!Utils.isValidSubUrl(url)) {
+                    return 0
+                }
+            }
+            Log.i(AppConfig.TAG, url)
 
             var configText = try {
                 val httpPort = SettingsManager.getHttpPort()
                 HttpUtil.getUrlContentWithUserAgent(url, 15000, httpPort)
             } catch (e: Exception) {
-                Log.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error, try……")
-                //e.printStackTrace()
+                Log.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error", e)
                 ""
             }
             if (configText.isEmpty()) {
                 configText = try {
                     HttpUtil.getUrlContentWithUserAgent(url)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Log.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
                     ""
                 }
             }
@@ -440,7 +446,7 @@ object AngConfigManager {
             }
             return parseConfigViaSub(configText, it.first, false)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Failed to update config via subscription", e)
             return 0
         }
     }
@@ -483,5 +489,32 @@ object AngConfigManager {
         subItem.url = url
         MmkvManager.encodeSubscription("", subItem)
         return 1
+    }
+
+    /**
+     * Creates an intelligent selection configuration based on multiple server configurations.
+     *
+     * @param context The application context used for configuration generation.
+     * @param guidList The list of server GUIDs to be included in the intelligent selection.
+     *                 Each GUID represents a server configuration that will be combined.
+     * @param subid The subscription ID to associate with the generated configuration.
+     *              This helps organize the configuration under a specific subscription.
+     * @return The GUID key of the newly created intelligent selection configuration,
+     *         or null if the operation fails (e.g., empty guidList or configuration parsing error).
+     */
+    fun createIntelligentSelection(
+        context: Context,
+        guidList: List<String>,
+        subid: String
+    ): String? {
+        if (guidList.isEmpty()) {
+            return null
+        }
+        val result = V2rayConfigManager.genV2rayConfig(context, guidList) ?: return null
+        val config = CustomFmt.parse(JsonUtil.toJson(result)) ?: return null
+        config.subscriptionId = subid
+        val key = MmkvManager.encodeServerConfig("", config)
+        MmkvManager.encodeServerRaw(key, JsonUtil.toJsonPretty(result) ?: "")
+        return key
     }
 }
