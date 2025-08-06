@@ -16,6 +16,7 @@ import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.RoutingType
 import com.v2ray.ang.dto.RulesetItem
 import com.v2ray.ang.dto.V2rayConfig
+import com.v2ray.ang.dto.VpnInterfaceAddressConfig
 import com.v2ray.ang.handler.MmkvManager.decodeServerConfig
 import com.v2ray.ang.handler.MmkvManager.decodeServerList
 import com.v2ray.ang.util.JsonUtil
@@ -84,7 +85,7 @@ object SettingsManager {
             resetRoutingRulesetsCommon(rulesetList)
             return true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(ANG_PACKAGE, "Failed to reset routing rulesets", e)
             return false
         }
     }
@@ -159,7 +160,7 @@ object SettingsManager {
      * @return True if bypassing LAN, false otherwise.
      */
     fun routingRulesetsBypassLan(): Boolean {
-        val vpnBypassLan = MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_BYPASS_LAN) ?: "0"
+        val vpnBypassLan = MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_BYPASS_LAN) ?: "1"
         if (vpnBypassLan == "1") {
             return true
         } else if (vpnBypassLan == "2") {
@@ -167,11 +168,11 @@ object SettingsManager {
         }
 
         val guid = MmkvManager.getSelectServer() ?: return false
-        val config = MmkvManager.decodeServerConfig(guid) ?: return false
+        val config = decodeServerConfig(guid) ?: return false
         if (config.configType == EConfigType.CUSTOM) {
             val raw = MmkvManager.decodeServerRaw(guid) ?: return false
             val v2rayConfig = JsonUtil.fromJson(raw, V2rayConfig::class.java)
-            val exist = v2rayConfig.routing.rules.filter { it.outboundTag == TAG_DIRECT }?.any {
+            val exist = v2rayConfig.routing.rules.filter { it.outboundTag == TAG_DIRECT }.any {
                 it.domain?.contains(GEOSITE_PRIVATE) == true || it.ip?.contains(GEOIP_PRIVATE) == true
             }
             return exist == true
@@ -216,7 +217,7 @@ object SettingsManager {
      * @return The ProfileItem.
      */
     fun getServerViaRemarks(remarks: String?): ProfileItem? {
-        if (remarks == null) {
+        if (remarks.isNullOrEmpty()) {
             return null
         }
         val serverList = decodeServerList()
@@ -242,7 +243,7 @@ object SettingsManager {
      * @return The HTTP port.
      */
     fun getHttpPort(): Int {
-        return getSocksPort() + (if (Utils.isXray()) 0 else 1)
+        return getSocksPort() + if (Utils.isXray()) 0 else 1
     }
 
     /**
@@ -265,10 +266,7 @@ object SettingsManager {
                             input.copyTo(output)
                         }
                     }
-                    Log.i(
-                        ANG_PACKAGE,
-                        "Copied from apk assets folder to ${target.absolutePath}"
-                    )
+                    Log.i(AppConfig.TAG, "Copied from apk assets folder to ${target.absolutePath}")
                 }
         } catch (e: Exception) {
             Log.e(ANG_PACKAGE, "asset copy failed", e)
@@ -319,10 +317,10 @@ object SettingsManager {
      */
     fun getDelayTestUrl(second: Boolean = false): String {
         return if (second) {
-            AppConfig.DelayTestUrl2
+            AppConfig.DELAY_TEST_URL2
         } else {
             MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL)
-                ?: AppConfig.DelayTestUrl
+                ?: AppConfig.DELAY_TEST_URL
         }
     }
 
@@ -343,6 +341,7 @@ object SettingsManager {
             Language.VIETNAMESE -> Locale("vi")
             Language.RUSSIAN -> Locale("ru")
             Language.PERSIAN -> Locale("fa")
+            Language.ARABIC -> Locale("ar")
             Language.BANGLA -> Locale("bn")
             Language.BAKHTIARI -> Locale("bqi", "IR")
         }
@@ -357,5 +356,18 @@ object SettingsManager {
             "1" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             "2" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         }
+    }
+
+    /**
+     * Retrieves the currently selected VPN interface address configuration.
+     * This method reads the user's preference for VPN interface addressing and returns
+     * the corresponding configuration containing IPv4 and IPv6 addresses.
+     *
+     * @return The selected VpnInterfaceAddressConfig instance, or the default configuration
+     *         if no valid selection is found or if the stored index is invalid.
+     */
+    fun getCurrentVpnInterfaceAddressConfig(): VpnInterfaceAddressConfig {
+        val selectedIndex = MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX, "0")?.toInt()
+        return VpnInterfaceAddressConfig.getConfigByIndex(selectedIndex ?: 0)
     }
 }

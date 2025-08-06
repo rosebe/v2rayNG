@@ -11,6 +11,7 @@ import com.v2ray.ang.dto.VmessQRCode
 import com.v2ray.ang.extension.idnHost
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.V2rayConfigManager
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import java.net.URI
@@ -33,7 +34,7 @@ object VmessFmt : FmtBase() {
         var result = str.replace(EConfigType.VMESS.protocolScheme, "")
         result = Utils.decode(result)
         if (TextUtils.isEmpty(result)) {
-            Log.d(AppConfig.ANG_PACKAGE, "R.string.toast_decoding_failed")
+            Log.w(AppConfig.TAG, "Toast decoding failed")
             return null
         }
         val vmessQRCode = JsonUtil.fromJson(result, VmessQRCode::class.java)
@@ -43,7 +44,7 @@ object VmessFmt : FmtBase() {
             || TextUtils.isEmpty(vmessQRCode.id)
             || TextUtils.isEmpty(vmessQRCode.net)
         ) {
-            Log.d(AppConfig.ANG_PACKAGE, "R.string.toast_incorrect_protocol")
+            Log.w(AppConfig.TAG, "Toast incorrect protocol")
             return null
         }
 
@@ -73,6 +74,7 @@ object VmessFmt : FmtBase() {
                 config.serviceName = vmessQRCode.path
                 config.authority = vmessQRCode.host
             }
+
             else -> {}
         }
 
@@ -119,6 +121,7 @@ object VmessFmt : FmtBase() {
                 vmessQRCode.path = config.serviceName.orEmpty()
                 vmessQRCode.host = config.authority.orEmpty()
             }
+
             else -> {}
         }
 
@@ -148,7 +151,7 @@ object VmessFmt : FmtBase() {
         if (uri.rawQuery.isNullOrEmpty()) return null
         val queryParam = getQueryParam(uri)
 
-        config.remarks = Utils.urlDecode(uri.fragment.orEmpty())
+        config.remarks = Utils.urlDecode(uri.fragment.orEmpty()).let { if (it.isEmpty()) "none" else it }
         config.server = uri.idnHost
         config.serverPort = uri.port.toString()
         config.password = uri.userInfo
@@ -166,38 +169,22 @@ object VmessFmt : FmtBase() {
      * @return the converted OutboundBean object, or null if conversion fails
      */
     fun toOutbound(profileItem: ProfileItem): OutboundBean? {
-        val outboundBean = OutboundBean.create(EConfigType.VMESS)
+        val outboundBean = V2rayConfigManager.createInitOutbound(EConfigType.VMESS)
 
         outboundBean?.settings?.vnext?.first()?.let { vnext ->
-            vnext.address = profileItem.server.orEmpty()
+            vnext.address = getServerAddress(profileItem)
             vnext.port = profileItem.serverPort.orEmpty().toInt()
             vnext.users[0].id = profileItem.password.orEmpty()
             vnext.users[0].security = profileItem.method
         }
 
-        val sni = outboundBean?.streamSettings?.populateTransportSettings(
-            profileItem.network.orEmpty(),
-            profileItem.headerType,
-            profileItem.host,
-            profileItem.path,
-            profileItem.seed,
-            profileItem.quicSecurity,
-            profileItem.quicKey,
-            profileItem.mode,
-            profileItem.serviceName,
-            profileItem.authority,
-        )
+        val sni = outboundBean?.streamSettings?.let {
+            V2rayConfigManager.populateTransportSettings(it, profileItem)
+        }
 
-        outboundBean?.streamSettings?.populateTlsSettings(
-            profileItem.security.orEmpty(),
-            profileItem.insecure == true,
-            if (profileItem.sni.isNullOrEmpty()) sni else profileItem.sni,
-            profileItem.fingerPrint,
-            profileItem.alpn,
-            null,
-            null,
-            null
-        )
+        outboundBean?.streamSettings?.let {
+            V2rayConfigManager.populateTlsSettings(it, profileItem, sni)
+        }
 
         return outboundBean
     }

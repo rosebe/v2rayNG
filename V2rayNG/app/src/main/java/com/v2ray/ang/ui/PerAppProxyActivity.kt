@@ -1,10 +1,12 @@
 package com.v2ray.ang.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
@@ -13,21 +15,21 @@ import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityBypassListBinding
 import com.v2ray.ang.dto.AppInfo
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.extension.v2RayApplication
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.AppManagerUtil
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.Utils
+import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.Collator
 
 class PerAppProxyActivity : BaseActivity() {
-    private val binding by lazy {
-        ActivityBypassListBinding.inflate(layoutInflater)
-    }
+    private val binding by lazy { ActivityBypassListBinding.inflate(layoutInflater) }
 
     private var adapter: PerAppProxyAdapter? = null
     private var appsAll: List<AppInfo>? = null
@@ -51,13 +53,13 @@ class PerAppProxyActivity : BaseActivity() {
                         appsList.forEach { app ->
                             app.isSelected = if (blacklist.contains(app.packageName)) 1 else 0
                         }
-                        appsList.sortedWith(Comparator { p1, p2 ->
+                        appsList.sortedWith { p1, p2 ->
                             when {
                                 p1.isSelected > p2.isSelected -> -1
                                 p1.isSelected == p2.isSelected -> 0
                                 else -> 1
                             }
-                        })
+                        }
                     } else {
                         val collator = Collator.getInstance()
                         appsList.sortedWith(compareBy(collator) { it.appName })
@@ -83,6 +85,10 @@ class PerAppProxyActivity : BaseActivity() {
             MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, isChecked)
         }
         binding.switchBypassApps.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_APPS, false)
+
+        binding.layoutSwitchBypassAppsTips.setOnClickListener {
+            Toasty.info(this, R.string.summary_pref_per_app_proxy, Toast.LENGTH_LONG, true).show()
+        }
     }
 
     override fun onPause() {
@@ -112,8 +118,10 @@ class PerAppProxyActivity : BaseActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+
+    @SuppressLint("NotifyDataSetChanged")
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.select_all -> adapter?.let {
+        R.id.select_all -> adapter?.let { it ->
             val pkgNames = it.apps.map { it.packageName }
             if (it.blacklist.containsAll(pkgNames)) {
                 it.apps.forEach {
@@ -152,7 +160,7 @@ class PerAppProxyActivity : BaseActivity() {
         toast(R.string.msg_downloading_content)
         binding.pbWaiting.show()
 
-        val url = AppConfig.androidpackagenamelistUrl
+        val url = AppConfig.ANDROID_PACKAGE_NAME_LIST_URL
         lifecycleScope.launch(Dispatchers.IO) {
             var content = HttpUtil.getUrlContent(url, 5000)
             if (content.isNullOrEmpty()) {
@@ -160,9 +168,9 @@ class PerAppProxyActivity : BaseActivity() {
                 content = HttpUtil.getUrlContent(url, 5000, httpPort) ?: ""
             }
             launch(Dispatchers.Main) {
-                Log.d(ANG_PACKAGE, content)
+                Log.i(AppConfig.TAG, content)
                 selectProxyApp(content, true)
-                toast(R.string.toast_success)
+                toastSuccess(R.string.toast_success)
                 binding.pbWaiting.hide()
             }
         }
@@ -172,7 +180,7 @@ class PerAppProxyActivity : BaseActivity() {
         val content = Utils.getClipboard(applicationContext)
         if (TextUtils.isEmpty(content)) return
         selectProxyApp(content, false)
-        toast(R.string.toast_success)
+        toastSuccess(R.string.toast_success)
     }
 
     private fun exportProxyApp() {
@@ -182,9 +190,10 @@ class PerAppProxyActivity : BaseActivity() {
             lst = lst + System.getProperty("line.separator") + it
         }
         Utils.setClipboard(applicationContext, lst)
-        toast(R.string.toast_success)
+        toastSuccess(R.string.toast_success)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun selectProxyApp(content: String, force: Boolean): Boolean {
         try {
             val proxyApps = if (TextUtils.isEmpty(content)) {
@@ -197,10 +206,10 @@ class PerAppProxyActivity : BaseActivity() {
             adapter?.blacklist?.clear()
 
             if (binding.switchBypassApps.isChecked) {
-                adapter?.let {
+                adapter?.let { it ->
                     it.apps.forEach block@{
                         val packageName = it.packageName
-                        Log.d(ANG_PACKAGE, packageName)
+                        Log.i(AppConfig.TAG, packageName)
                         if (!inProxyApps(proxyApps, packageName, force)) {
                             adapter?.blacklist?.add(packageName)
                             println(packageName)
@@ -210,10 +219,10 @@ class PerAppProxyActivity : BaseActivity() {
                     it.notifyDataSetChanged()
                 }
             } else {
-                adapter?.let {
+                adapter?.let { it ->
                     it.apps.forEach block@{
                         val packageName = it.packageName
-                        Log.d(ANG_PACKAGE, packageName)
+                        Log.i(AppConfig.TAG, packageName)
                         if (inProxyApps(proxyApps, packageName, force)) {
                             adapter?.blacklist?.add(packageName)
                             println(packageName)
@@ -224,7 +233,7 @@ class PerAppProxyActivity : BaseActivity() {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(AppConfig.TAG, "Error selecting proxy app", e)
             return false
         }
         return true
@@ -259,7 +268,12 @@ class PerAppProxyActivity : BaseActivity() {
 
         adapter = PerAppProxyAdapter(this, apps, adapter?.blacklist)
         binding.recyclerView.adapter = adapter
-        adapter?.notifyDataSetChanged()
+        refreshData()
         return true
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun refreshData() {
+        adapter?.notifyDataSetChanged()
     }
 }
