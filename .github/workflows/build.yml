@@ -75,7 +75,7 @@ jobs:
 
         #sed -i "s/APP_PLATFORM=android-19/APP_PLATFORM=android-21/" ${{ github.workspace }}/compile-tun2socks.sh
             
-    - name: Restore cached libtun2socks
+    - name: Restore cached libtun2socks and hev-socks5-tunnel
       id: cache-libtun2socks-restore
       uses: actions/cache/restore@v4
       with:
@@ -108,7 +108,7 @@ jobs:
             #echo "Changed $(basename "$link") from $current_target to $new_target"
         #done
 
-    - name: Build libtun2socks
+    - name: Build libtun2socks and hev-socks5-tunnel
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
         cd ${{ github.workspace }}
@@ -119,7 +119,7 @@ jobs:
         #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         #NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-    - name: Save libtun2socks
+    - name: Save libtun2socks and hev-socks5-tunnel
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
@@ -128,11 +128,11 @@ jobs:
         #key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
         key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
         
-    - name: Copy libtun2socks
+    - name: Copy libtun2socks and hev-socks5-tunnel
       run: |
         cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
 
-    - name: List libtun2socks files
+    - name: List libtun2socks and hev-socks5-tunnel files
       run: |
         find ${{ github.workspace }}/libs/ -type f -exec ls -l {} \;
 
