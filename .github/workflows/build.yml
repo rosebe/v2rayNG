@@ -211,7 +211,7 @@ jobs:
         ## Clean up and verify module dependencies
         go mod tidy -v
         ## Show changes
-        git diff
+        #git diff
         #gomobile bind -a -v -androidapi 21 -ldflags='-s -w' ./
         gomobile bind -a -v -trimpath -androidapi 21 -ldflags='-s -w -buildid=' ./
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
