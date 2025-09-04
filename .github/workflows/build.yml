@@ -49,10 +49,10 @@ jobs:
       run: |
         echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
           --channel=3 \
-          --install "ndk;29.0.13846066"
+          --install "ndk;29.0.14033849"
           #--install "ndk;29.0.13113456"
-        echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> $GITHUB_ENV
+        echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14033849" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14033849" >> $GITHUB_ENV
         #echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13599879" >> $GITHUB_ENV
         #echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13599879" >> $GITHUB_ENV
         #sed -i '10i\
@@ -336,7 +336,7 @@ jobs:
         curl https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch | patch --verbose -p 1
         sed -i '10i\
         \
-            ndkVersion = "29.0.13846066"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+            ndkVersion = "29.0.14033849"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
             #ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #curl -L  https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch -o build.gradle.kts.patch
         #patch -p1 <  build.gradle.kts.patch
