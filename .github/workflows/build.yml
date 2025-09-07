@@ -330,7 +330,7 @@ jobs:
                         
     - name: Build APK
       run: |
-        sed -i "s/gradle-9.0.0-bin.zip/gradle-9.1.0-rc-1-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
+        sed -i "s/gradle-9.0.0-bin.zip/gradle-9.1.0-rc-2-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         #sed -i "s/gradle-8.12-bin.zip/gradle-8.13-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}
         curl https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch | patch --verbose -p 1
