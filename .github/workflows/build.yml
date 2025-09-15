@@ -341,7 +341,7 @@ jobs:
           
     - name: Upload binaries [ arm64-v8a*signed.apk || armeabi-v7a*signed.apk || x86*signed.apk || x86_64*signed.apk || universal*signed.apk ] to release
       #uses: svenstaro/upload-release-action@e2a63377780a8bacc68dcac9b0979ee20ad5a791
-      uses: svenstaro/upload-release-action@2.10.0
+      uses: svenstaro/upload-release-action@2.11.2
       #if: github.event_name == 'release'
       if: github.event.inputs.Upload_Binaries_To_Release == 'true'
       with:
