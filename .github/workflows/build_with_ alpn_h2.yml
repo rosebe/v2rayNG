@@ -223,7 +223,7 @@ jobs:
         find ${{ github.workspace }}/AndroidLibXrayLite/ -type f -exec ls -l {} \; | grep aar
         
     - name: Upload go.mod
-      uses: actions/upload-artifact@v4.5.0
+      uses: actions/upload-artifact@v4.6.2
       if: ${{  success() }}
       with:
         name: go.mod
@@ -231,7 +231,7 @@ jobs:
           ${{ github.workspace }}/AndroidLibXrayLite/go.mod
           
     - name: Upload go.sum
-      uses: actions/upload-artifact@v4.5.0
+      uses: actions/upload-artifact@v4.6.2
       if: ${{  success() }}
       with:
         name: go.sum
