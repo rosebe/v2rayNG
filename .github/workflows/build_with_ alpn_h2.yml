@@ -223,7 +223,7 @@ jobs:
         find ${{ github.workspace }}/AndroidLibXrayLite/ -type f -exec ls -l {} \; | grep aar
         
     - name: Upload go.mod
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       if: ${{  success() }}
       with:
         name: go.mod
@@ -231,7 +231,7 @@ jobs:
           ${{ github.workspace }}/AndroidLibXrayLite/go.mod
           
     - name: Upload go.sum
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       if: ${{  success() }}
       with:
         name: go.sum
@@ -358,7 +358,7 @@ jobs:
         #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
            
     - name: Upload gradle_problems_report
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       if: ${{  success() }}
       with:
         name: gradle_problems_report
@@ -381,7 +381,7 @@ jobs:
         buildToolsVersion: 36.0.0   
     
     - name: Upload APK
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v5.0.0
       if: ${{  success() }}
       with:
         name: apk
