@@ -73,15 +73,16 @@ jobs:
         path: ${{ github.workspace }}/libs
         #key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/refs/heads/new') }}-${{ hashFiles('.git/modules/libancillary/refs/heads/shadowsocks-android') }}
         #key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
-        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
-
+        #key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
+        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}-${{ hashFiles('compile-tun2socks.sh') }}--${{ hashFiles('compile-hevtun.sh') }}
     
     - name: Build libtun2socks and hev-socks5-tunnel
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
         cd ${{ github.workspace }}
         #git submodule update --init --recursive
-        bash compile-tun2socks.sh                                                     
+        bash compile-tun2socks.sh && bash compile-hevtun.sh
+                                                        
       #env:
         #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         #NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
@@ -93,8 +94,8 @@ jobs:
         path: ${{ github.workspace }}/libs
         #key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/badvpn/refs/heads/new') }}-${{ hashFiles('.git/modules/libancillary/refs/heads/shadowsocks-android') }}
         #key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
-        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
-
+        #key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
+        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}-${{ hashFiles('compile-tun2socks.sh') }}--${{ hashFiles('compile-hevtun.sh') }}
         
     - name: Copy libtun2socks and hev-socks5-tunnel
       run: |
