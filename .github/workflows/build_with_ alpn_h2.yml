@@ -315,7 +315,7 @@ jobs:
         find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec ls -l {} \;
         
     - name: Setup Java
-      uses: actions/setup-java@v5.1.0
+      uses: actions/setup-java@v5.2.0
       with:
         distribution: 'temurin'
         #java-version: '17'
