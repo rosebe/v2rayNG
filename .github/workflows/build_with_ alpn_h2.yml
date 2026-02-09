@@ -340,6 +340,7 @@ jobs:
         \
             ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #    ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+        sed -i -E 's/(versionCode = )684/\1687/; s/(versionName = "1.10.)32"/\135"/' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #curl -L  https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch -o build.gradle.kts.patch
         #patch -p1 <  build.gradle.kts.patch
         cd ${{ github.workspace }}/V2rayNG
