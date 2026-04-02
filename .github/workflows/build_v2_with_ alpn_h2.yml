@@ -39,7 +39,7 @@ jobs:
         fetch-depth: '0'
     
     - name: Setup Android environment SDK
-      uses: android-actions/setup-android@v3.2.2
+      uses: android-actions/setup-android@v4.0.0
       with:
         log-accepted-android-sdk-licenses: false
         #cmdline-tools-version: '12266719'
@@ -57,9 +57,9 @@ jobs:
         echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
         #echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13599879" >> $GITHUB_ENV
         #echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13599879" >> $GITHUB_ENV
-        #sed -i '10i\
-        #\
-        #    ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts    
+        sed -i '10i\
+        \
+            ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts    
         
     - name: Patch AndroidLibXrayLite TO ALPN_h2_v2
       run: |
@@ -148,6 +148,7 @@ jobs:
         #cd ${{ github.workspace }}/build
         #git clone --depth=1 -b alpn_h2 https://github.com/rosebe/AndroidLibXrayLite.git
         cd ${{ github.workspace }}/AndroidLibXrayLite
+        echo "Download geoip/geosite files"
         mkdir -p assets data
         
         #sed -i "s/dyhkwong\/v2ray-/v2ray\//" gen_assets.sh
@@ -274,9 +275,9 @@ jobs:
         #sed -i "s/gradle-8.12-bin.zip/gradle-8.13-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}
         #curl https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch | patch --verbose -p 1
-        sed -i '10i\
-        \
-            ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+        #sed -i '10i\
+        #\
+        #    ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #    ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #sed -i -E 's/(versionCode = )684/\1687/; s/(versionName = "1.10.)32"/\135"/' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #curl -L  https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch -o build.gradle.kts.patch
