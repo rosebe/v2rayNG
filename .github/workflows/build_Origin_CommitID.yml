@@ -34,7 +34,7 @@ jobs:
         fetch-depth: '0'
     
     - name: Setup Android environment SDK
-      uses: android-actions/setup-android@v3.2.2
+      uses: android-actions/setup-android@v4.0.0
       with:
         log-accepted-android-sdk-licenses: false
         cmdline-tools-version: '12266719'
