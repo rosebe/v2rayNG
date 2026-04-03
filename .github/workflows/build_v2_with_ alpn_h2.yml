@@ -173,6 +173,8 @@ jobs:
         gomobile init
         ## Clean up and verify module dependencies
         go mod tidy -v
+        echo "--- 修改后的 go.mod 内容 ---"
+        cat go.mod
         ## Show changes
         #git diff
         #gomobile bind -a -v -androidapi 21 -ldflags='-s -w' ./
