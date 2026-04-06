@@ -16,6 +16,6 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "03:30"
-      # Use China Standard Time (UTC +03:30)
+      # Use China Standard Time (UTC +08:00)
       timezone: "Asia/Shanghai"
       
