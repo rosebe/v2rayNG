@@ -117,11 +117,11 @@ jobs:
         # echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
         popd
            
-    - name: Get go.sum
-      run: |
-        cd ${{ github.workspace }}
-        curl -L "https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go1.23/go.sum" -o go.sum
-        #wget https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go1.23/go.sum
+    #- name: Get go.sum
+      #run: |
+        #cd ${{ github.workspace }}
+        #curl -L "https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go1.23/go.sum" -o go.sum
+        ##wget https://github.com/rosebe/v2rayNG/raw/refs/heads/Generate_apk_signing_certificate_with_keytool/go1.23/go.sum
       
     - name: Get go.mod
       run: |
