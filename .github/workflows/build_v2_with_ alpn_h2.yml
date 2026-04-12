@@ -328,6 +328,15 @@ jobs:
       #env:
         #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
            
+    
+    - name: Rename APKs
+      if: ${{ success() }}
+      run: |
+        cd ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release/
+        for file in v2rayNG_*.apk; do
+            mv "$file" "${file%.apk}-signed.apk"
+        done
+    
     - name: Upload gradle_problems_report
       uses: actions/upload-artifact@v6.0.0
       if: ${{  success() }}
