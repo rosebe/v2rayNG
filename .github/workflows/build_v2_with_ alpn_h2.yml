@@ -312,15 +312,19 @@ jobs:
         #sed -i 's/org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/org.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8/' ${{ github.workspace }}/V2rayNG/gradle.properties
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
+        
+        echo "$SIGNINGKEYBASE64" | base64 --decode > app/release.jks
         #./gradlew build --no-daemon
-        ./gradlew assembleRelease --no-daemon
+        
+        ###./gradlew assembleRelease --no-daemon
+        
         #./gradlew assembleRelease
         #./gradlew licenseFdroidReleaseReport --no-daemon
-        #./gradlew assembleRelease --no-daemon \
-        #                          -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
-        #                          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTOREPASSWORD }} \
-        #                          -Pandroid.injected.signing.key.alias=${{ secrets.ALIAS }} \
-        #                          -Pandroid.injected.signing.key.password=${{ secrets.KEYPASSWORD }}
+        ./gradlew assembleRelease --no-daemon \
+            "-Pandroid.injected.signing.store.file=$PWD/app/release.jks" \
+            "-Pandroid.injected.signing.store.password=${{ secrets.KEYSTOREPASSWORD }}" \
+            "-Pandroid.injected.signing.key.alias=${{ secrets.ALIAS }}" \
+            "-Pandroid.injected.signing.key.password=${{ secrets.KEYPASSWORD }}"
       #env:
         #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
            
@@ -336,16 +340,16 @@ jobs:
       run: |
         find V2rayNG/app/build/outputs/apk/ -type f -exec du -h {} \;
     
-    - name: Sign APK files
-      #uses: ilharp/sign-android-release@nightly
-      uses: ilharp/sign-android-release@v2
-      with:
-        releaseDir: V2rayNG/app/build/outputs/apk/playstore/release/
-        keyAlias: ${{ env.ALIAS }}
-        keyPassword: ${{ env.KEYPASSWORD }}
-        keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
-        signingKey: ${{ env.SIGNINGKEYBASE64 }}
-        buildToolsVersion: 36.1.0   
+    #- name: Sign APK files
+      ##uses: ilharp/sign-android-release@nightly
+      #uses: ilharp/sign-android-release@v2
+      #with:
+        #releaseDir: V2rayNG/app/build/outputs/apk/playstore/release/
+        #keyAlias: ${{ env.ALIAS }}
+        #keyPassword: ${{ env.KEYPASSWORD }}
+        #keyStorePassword: ${{ env.KEYSTOREPASSWORD }}
+        #signingKey: ${{ env.SIGNINGKEYBASE64 }}
+        #buildToolsVersion: 36.1.0   
     
     - name: Upload APK
       uses: actions/upload-artifact@v7.0.0
