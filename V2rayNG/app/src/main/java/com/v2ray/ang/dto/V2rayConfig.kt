@@ -31,7 +31,7 @@ data class V2rayConfig(
 
     data class InboundBean(
         var tag: String,
-        var port: Int,
+        var port: Int?,
         var protocol: String,
         var listen: String? = null,
         var settings: InSettingsBean? = null,
@@ -44,10 +44,16 @@ data class V2rayConfig(
             var auth: String? = null,
             var udp: Boolean? = null,
             var userLevel: Int? = null,
+            var accounts: List<SocksAccountBean>? = null,
             var name: String? = null,
-            @SerializedName("MTU")
+
             var mtu: Int? = null
-        )
+        ) {
+            data class SocksAccountBean(
+                var user: String = "",
+                var pass: String = ""
+            )
+        }
 
         data class SniffingBean(
             var enabled: Boolean,
@@ -417,8 +423,9 @@ data class V2rayConfig(
 
         data class RulesBean(
             var type: String = "field",
-            var ip: ArrayList<String>? = null,
-            var domain: ArrayList<String>? = null,
+            var ip: List<String>? = null,
+            var domain: List<String>? = null,
+            var process: List<String>? = null,
             var outboundTag: String? = null,
             var balancerTag: String? = null,
             var port: String? = null,
