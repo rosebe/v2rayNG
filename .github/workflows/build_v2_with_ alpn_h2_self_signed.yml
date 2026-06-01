@@ -204,7 +204,7 @@ jobs:
         #gomobile bind -a -v -trimpath -androidapi 21 -ldflags='-s -w -buildid=' ./
         # Build the AAR (compile from source)
         echo "Building libv2ray.aar..."
-        gomobile bind -a -v -trimpath -target=android -androidapi 24 -ldflags='-s -w -buildid=' -o libv2ray.aar ./
+        gomobile bind -a -v -trimpath -target=android -androidapi 24 -ldflags='-s -w -buildid= -checklinkname=0' -o libv2ray.aar ./
         # Move to the expected location
         mkdir -p ${{ github.workspace }}/V2rayNG/app/libs/
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
