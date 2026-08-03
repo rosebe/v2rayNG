@@ -378,8 +378,8 @@ object CoreConfigManager {
         val fallbackTag = if (strategyType.supportsObservatory && resolvedOutbound.profile.policyGroupTestOutbounds != false) {
             resolvedOutbound.profile.policyGroupFallbackTag
                 ?.takeIf { it.isNotEmpty() && it != AppConfig.TAG_PROXY }
-                // Xray excludes dead random/roundRobin candidates only when fallbackTag is set;
-                // without this default, an enabled empty field creates no observatory.
+            // Xray excludes dead random/roundRobin candidates only when fallbackTag is set;
+            // without this default, an enabled empty field creates no observatory.
                 ?: membersToAdd.first().tag
         } else null
         val strategy = buildBalancerStrategy(
@@ -915,9 +915,14 @@ object CoreConfigManager {
         val userHosts = MmkvManager.decodeSettingsString(AppConfig.PREF_DNS_HOSTS)
         if (userHosts.isNotNullEmpty()) {
             val userHostsMap = userHosts?.split(",").orEmpty()
-                .filter { it.isNotEmpty() }
-                .filter { it.contains(":") }
-                .associate { it.split(":").let { (k, v) -> k to v } }
+                .filter { it.isNotBlank() && it.contains(":") }
+                .associate {
+                    // Use limit = 2 to split only at the first colon.
+                    // This ensures that IPv6 addresses (which contain multiple colons)
+                    // are preserved entirely in the second part.
+                    val parts = it.split(":", limit = 2)
+                    parts[0].trim() to parts[1].trim()
+                }
             hosts.putAll(userHostsMap)
         }
 
