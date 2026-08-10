@@ -53,7 +53,8 @@ fun AboutScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
     var showOssDialog by remember { mutableStateOf(false) }
 
-    val versionText = "v${BuildConfig.VERSION_NAME} (${CoreNativeManager.getLibVersion()})"
+    val libVersion = CoreNativeManager.getLibVersion()
+    val versionText = "v${BuildConfig.VERSION_NAME} ($libVersion)"
     val appIdText = BuildConfig.APPLICATION_ID
 
     Scaffold(
@@ -121,7 +122,7 @@ fun AboutScreen(onBackClick: () -> Unit) {
             },
             confirmButton = {
                 TextButton(onClick = { showOssDialog = false }) {
-                    Text(stringResource(android.R.string.ok))
+                    Text(stringResource(R.string.action_ok))
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface,

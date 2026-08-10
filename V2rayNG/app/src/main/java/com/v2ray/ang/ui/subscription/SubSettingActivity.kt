@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +58,11 @@ import com.v2ray.ang.util.Utils
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
+private enum class SubscriptionShareAction(@StringRes val labelRes: Int) {
+    QRCode(R.string.share_subscription_qrcode),
+    Clipboard(R.string.share_subscription_clipboard)
+}
+
 class SubSettingActivity : BaseComponentActivity() {
     private val viewModel: SubscriptionsViewModel by viewModels()
 
@@ -82,8 +87,7 @@ class SubSettingActivity : BaseComponentActivity() {
             onShareClipboard = { url ->
                 Utils.setClipboard(this, url)
                 toast(getString(R.string.toast_success))
-            },
-            shareSubMethodEntries = resources.getStringArray(R.array.share_sub_method).toList()
+            }
         )
     }
 
@@ -97,7 +101,6 @@ class SubSettingActivity : BaseComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubSettingScreen(
     viewModel: SubscriptionsViewModel,
@@ -108,8 +111,7 @@ fun SubSettingScreen(
     onEditSub: (String) -> Unit,
     onRemoveSub: (String) -> Unit,
     onShareQRCode: (String) -> Bitmap?,
-    onShareClipboard: (String) -> Unit,
-    shareSubMethodEntries: List<String>
+    onShareClipboard: (String) -> Unit
 ) {
     val subscriptions by viewModel.subsFlow.collectAsStateWithLifecycle()
     var showUpdateDialog by remember { mutableStateOf(false) }
@@ -133,10 +135,10 @@ fun SubSettingScreen(
                 isLoading = isLoading,
                 actions = {
                     IconButton(onClick = onAddClick) {
-                        Icon(painterResource(R.drawable.ic_add_24dp), contentDescription = stringResource(R.string.menu_item_add_config))
+                        Icon(painterResource(R.drawable.ic_add_24dp), contentDescription = stringResource(R.string.acc_add_subscription))
                     }
                     IconButton(onClick = { showUpdateDialog = true }) {
-                        Icon(painterResource(R.drawable.ic_restore_24dp), contentDescription = stringResource(R.string.title_sub_update))
+                        Icon(painterResource(R.drawable.ic_restore_24dp), contentDescription = stringResource(R.string.acc_update_subscriptions))
                     }
                 }
             )
@@ -200,14 +202,14 @@ fun SubSettingScreen(
                                         }) {
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_share_24dp),
-                                                contentDescription = "Share"
+                                                contentDescription = stringResource(R.string.acc_share_subscription)
                                             )
                                         }
                                     }
                                     IconButton(onClick = { onEditSub(subCache.guid) }) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_edit_24dp),
-                                            contentDescription = "Edit"
+                                            contentDescription = stringResource(R.string.acc_edit)
                                         )
                                     }
                                     IconButton(onClick = {
@@ -216,7 +218,7 @@ fun SubSettingScreen(
                                     }) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_delete_24dp),
-                                            contentDescription = "Delete"
+                                            contentDescription = stringResource(R.string.acc_delete)
                                         )
                                     }
                                 }
@@ -246,19 +248,13 @@ fun SubSettingScreen(
     if (shareTarget != null) {
         val (_, url) = shareTarget!!
         SelectListDialog(
-            options = shareSubMethodEntries,
-            onSelected = { index, _ ->
+            options = SubscriptionShareAction.entries,
+            optionText = { stringResource(it.labelRes) },
+            onSelected = { action ->
                 shareTarget = null
-                when (index) {
-                    0 -> {
-                        // QRCode
-                        showQRCodeBitmap = onShareQRCode(url)
-                    }
-
-                    1 -> {
-                        // Export to clipboard
-                        onShareClipboard(url)
-                    }
+                when (action) {
+                    SubscriptionShareAction.QRCode -> showQRCodeBitmap = onShareQRCode(url)
+                    SubscriptionShareAction.Clipboard -> onShareClipboard(url)
                 }
             },
             onDismiss = { shareTarget = null }
@@ -327,12 +323,12 @@ fun SubSettingScreen(
                     showUpdateDialog = false
                     onSubUpdate()
                 }) {
-                    Text(text = stringResource(android.R.string.ok))
+                    Text(text = stringResource(R.string.action_ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showUpdateDialog = false }) {
-                    Text(text = stringResource(android.R.string.cancel))
+                    Text(text = stringResource(R.string.action_cancel))
                 }
             }
         )

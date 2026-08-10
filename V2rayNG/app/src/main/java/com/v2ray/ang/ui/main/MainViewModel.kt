@@ -132,7 +132,7 @@ class MainViewModel(
                 _uiState.update {
                     it.copy(
                         statusText = dataSource.getString(
-                            R.string.connection_runing_task_left,
+                            R.string.connection_running_task_left,
                             event.progress
                         )
                     )
@@ -140,9 +140,7 @@ class MainViewModel(
             }
 
             is MainServiceEvent.MeasureConfigFinish -> {
-                if (event.finishedCount == "0") {
-                    onTestsFinished()
-                }
+                onTestsFinished()
             }
         }
     }

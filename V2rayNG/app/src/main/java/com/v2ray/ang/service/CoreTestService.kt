@@ -1,8 +1,11 @@
 package com.v2ray.ang.service
 
+import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import androidx.core.app.NotificationCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreNativeManager
@@ -11,6 +14,7 @@ import com.v2ray.ang.dto.TestServiceMessage
 import com.v2ray.ang.enums.NotificationChannelType
 import com.v2ray.ang.extension.serializable
 import com.v2ray.ang.handler.AngConfigManager
+import com.v2ray.ang.handler.AppLocaleManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.helper.NotificationHelper
@@ -19,8 +23,29 @@ import java.util.Collections
 
 class CoreTestService : Service() {
 
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(newBase?.let(AppLocaleManager::localizedContext))
+    }
+
     // manage active batch workers so each batch is independent and cancellable
     private val activeWorkers = Collections.synchronizedList(mutableListOf<RealPingWorkerService>())
+    private val cancelAction by lazy {
+        val intent = Intent(this, CoreTestService::class.java).putExtra(
+            "content",
+            TestServiceMessage(AppConfig.MSG_MEASURE_CONFIG_CANCEL)
+        )
+        val pendingIntent = PendingIntent.getService(
+            this,
+            NotificationChannelType.CORE_TEST.notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        NotificationCompat.Action.Builder(
+            R.drawable.ic_stop_24dp,
+            getString(R.string.action_cancel),
+            pendingIntent
+        ).build()
+    }
 
     /**
      * Initializes the V2Ray environment.
@@ -64,7 +89,8 @@ class CoreTestService : Service() {
             this,
             NotificationChannelType.CORE_TEST,
             getString(R.string.app_name),
-            getString(R.string.title_real_ping_all_server)
+            getString(R.string.title_real_ping_all_server),
+            cancelAction
         )
         val message = intent?.serializable<TestServiceMessage>("content")
         if (message == null) {
@@ -114,7 +140,7 @@ class CoreTestService : Service() {
                     channelType = NotificationChannelType.CORE_TEST,
                     context = this,
                     title = getString(R.string.app_name),
-                    content = getString(R.string.connection_runing_task_left, event.text)
+                    content = getString(R.string.connection_running_task_left, event.text)
                 )
                 MessageHelper.sendMsg2UI(this, AppConfig.MSG_MEASURE_CONFIG_NOTIFY, event.text)
             }
@@ -146,6 +172,7 @@ class CoreTestService : Service() {
     }
 
     private fun handleMeasureCancel() {
+        MessageHelper.sendMsg2UI(this, AppConfig.MSG_MEASURE_CONFIG_FINISH, "0")
         LogUtil.i(AppConfig.TAG, "CoreTestService received cancel message, cancelling ${activeWorkers.size} active workers")
         val snapshot = ArrayList(activeWorkers)
         snapshot.forEach { it.cancel() }

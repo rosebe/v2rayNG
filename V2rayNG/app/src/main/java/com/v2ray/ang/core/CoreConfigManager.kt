@@ -3,6 +3,7 @@ package com.v2ray.ang.core
 import android.content.Context
 import android.text.TextUtils
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.ConfigResult
 import com.v2ray.ang.dto.CoreConfigContext
@@ -33,7 +34,11 @@ object CoreConfigManager {
     fun getV2rayConfig(context: Context, guid: String): ConfigResult {
         try {
             val configContext = CoreConfigContextBuilder.build(context, guid)
-                ?: return ConfigResult(status = false, guid = guid, errorMessage = "Failed to build config context")
+                ?: return ConfigResult(
+                    status = false,
+                    guid = guid,
+                    errorMessage = "Failed to build config context"
+                )
             if (configContext.isCustom) {
                 return buildV2rayCustomConfig(configContext)
             }
@@ -56,7 +61,11 @@ object CoreConfigManager {
     fun getV2rayConfig4Speedtest(context: Context, guid: String): ConfigResult {
         try {
             val configContext = CoreConfigContextBuilder.build(context, guid)
-                ?: return ConfigResult(status = false, guid = guid, errorMessage = "Failed to build config context")
+                ?: return ConfigResult(
+                    status = false,
+                    guid = guid,
+                    errorMessage = "Failed to build config context"
+                )
             if (configContext.isCustom) {
                 return buildV2rayCustomConfig(configContext)
             }
@@ -69,7 +78,7 @@ object CoreConfigManager {
             return ConfigResult(
                 status = false,
                 guid = guid,
-                errorMessage = "Failed to get V2ray config for speedtest: ${e.message ?: e.javaClass.simpleName}"
+                errorMessage = "Failed to get V2ray config: ${e.message ?: e.javaClass.simpleName}"
             )
         }
     }
@@ -80,13 +89,36 @@ object CoreConfigManager {
     private fun buildV2rayCustomConfig(configContext: CoreConfigContext): ConfigResult {
         val context = configContext.context
         val raw = MmkvManager.decodeServerRaw(configContext.guid)
-            ?: return ConfigResult(status = false, guid = configContext.guid, errorMessage = "Custom config is empty")
+            ?: return ConfigResult(
+                status = false,
+                guid = configContext.guid,
+                errorMessage = "Failed to build config context, config is empty"
+            )
         val result = ConfigResult(true, configContext.guid, raw)
-        if (!needTun()) {
-            return result
-        }
 
         val json = JsonUtil.parseString(raw)?.takeIf { it.isJsonObject }?.asJsonObject ?: return result
+
+        // Inject or remove traffic statistics configuration based on user preference
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_SPEED_ENABLED) == true) {
+            if (!json.has("stats")) {
+                json.add("stats", JsonObject())
+            }
+            if (!json.has("policy")) {
+                val policyObj = JsonObject()
+                val systemObj = JsonObject()
+                systemObj.addProperty("statsOutboundUplink", true)
+                systemObj.addProperty("statsOutboundDownlink", true)
+                policyObj.add("system", systemObj)
+                json.add("policy", policyObj)
+            }
+        } else {
+            json.remove("stats")
+            json.remove("policy")
+        }
+
+        if (!needTun()) {
+            return JsonUtil.toJsonPretty(json)?.let { ConfigResult(true, configContext.guid, it) } ?: result
+        }
 
         // Check whether package names need to be replaced with UIDs
         if (SettingsManager.canUseProcessRouting()) {

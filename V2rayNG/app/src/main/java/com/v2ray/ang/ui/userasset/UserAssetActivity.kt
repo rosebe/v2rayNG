@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,8 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +53,7 @@ import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.ui.base.HelperBaseComponentActivity
+import com.v2ray.ang.ui.compose.AppDropdownMenuItems
 import com.v2ray.ang.ui.compose.AppTopBar
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
 import com.v2ray.ang.ui.compose.ItemDivider
@@ -68,6 +68,12 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.DateFormat
 import java.util.Date
+
+private enum class AddAssetMenuAction(@StringRes val labelRes: Int) {
+    File(R.string.menu_item_add_file),
+    Url(R.string.menu_item_add_url),
+    QRCode(R.string.menu_item_scan_qrcode)
+}
 
 class UserAssetActivity : HelperBaseComponentActivity() {
 
@@ -238,7 +244,6 @@ class UserAssetActivity : HelperBaseComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAssetScreen(
     viewModel: UserAssetViewModel,
@@ -275,7 +280,7 @@ fun UserAssetScreen(
                 actions = {
                     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                         IconButton(onClick = { showAddMenu = true }) {
-                            Icon(painterResource(R.drawable.ic_add_24dp), contentDescription = stringResource(R.string.menu_item_add_asset))
+                            Icon(painterResource(R.drawable.ic_add_24dp), contentDescription = stringResource(R.string.acc_add_asset))
                         }
                         DropdownMenu(
                             expanded = showAddMenu,
@@ -284,22 +289,18 @@ fun UserAssetScreen(
                             offset = DpOffset(x = 0.dp, y = 0.dp),
                             modifier = Modifier.wrapContentWidth(Alignment.End)
                         ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_item_add_file)) },
-                                onClick = { showAddMenu = false; onAddFileClick() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_item_add_url)) },
-                                onClick = { showAddMenu = false; onAddUrlClick() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_item_scan_qrcode)) },
-                                onClick = { showAddMenu = false; onAddQrcodeClick() }
-                            )
+                            AppDropdownMenuItems(AddAssetMenuAction.entries, { it.labelRes }) { action ->
+                                showAddMenu = false
+                                when (action) {
+                                    AddAssetMenuAction.File -> onAddFileClick()
+                                    AddAssetMenuAction.Url -> onAddUrlClick()
+                                    AddAssetMenuAction.QRCode -> onAddQrcodeClick()
+                                }
+                            }
                         }
                     }
                     IconButton(onClick = onDownloadClick) {
-                        Icon(painterResource(R.drawable.ic_cloud_download_24dp), contentDescription = stringResource(R.string.menu_item_download_file))
+                        Icon(painterResource(R.drawable.ic_cloud_download_24dp), contentDescription = stringResource(R.string.acc_download_file))
                     }
                 }
             )
@@ -399,7 +400,7 @@ private fun UserAssetItem(
             IconButton(onClick = onEdit) {
                 Icon(
                     painter = painterResource(R.drawable.ic_edit_24dp),
-                    contentDescription = stringResource(R.string.menu_item_edit_config),
+                    contentDescription = stringResource(R.string.acc_edit),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -407,7 +408,7 @@ private fun UserAssetItem(
         IconButton(onClick = onDeleteClick) {
             Icon(
                 painter = painterResource(R.drawable.ic_delete_24dp),
-                contentDescription = stringResource(R.string.menu_item_del_config),
+                contentDescription = stringResource(R.string.acc_delete),
                 modifier = Modifier.size(24.dp)
             )
         }
