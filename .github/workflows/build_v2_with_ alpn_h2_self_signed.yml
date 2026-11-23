@@ -56,15 +56,15 @@ jobs:
       run: |
         echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
           --channel=3 \
-          --install "ndk;29.0.14206865"
+          --install "ndk;30.0.16248370"
         #  --install "ndk;29.0.13113456"
-        echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
+        echo "NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> $GITHUB_ENV
         #echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13599879" >> $GITHUB_ENV
         #echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13599879" >> $GITHUB_ENV
         sed -i '10i\
         \
-            ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts    
+            ndkVersion = "30.0.16248370"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts    
         
     - name: Patch AndroidLibXrayLite TO ALPN_h2_v2
       run: |
@@ -131,7 +131,8 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v7.0.0
       with:
-        go-version: '1.26'
+        go-version: '1.27'
+        #go-version: '1.27.4'
         #go-version-file: '${{ github.workspace }}/AndroidLibXrayLite/go.mod'
         check-latest: true
         cache: true     ##default
@@ -217,7 +218,7 @@ jobs:
         find ${{ github.workspace }}/AndroidLibXrayLite/ -type f -exec ls -l {} \; | grep aar
         
     - name: Upload go.mod
-      uses: actions/upload-artifact@v7.0.2
+      uses: actions/upload-artifact@v7.0.1
       if: ${{  success() }}
       with:
         name: go.mod
@@ -225,7 +226,7 @@ jobs:
           ${{ github.workspace }}/AndroidLibXrayLite/go.mod
           
     - name: Upload go.sum
-      uses: actions/upload-artifact@v7.0.2
+      uses: actions/upload-artifact@v7.0.1
       if: ${{  success() }}
       with:
         name: go.sum
@@ -272,7 +273,7 @@ jobs:
         find ${{ github.workspace }}/V2rayNG/app/libs/ -type f -exec ls -l {} \;
         
     - name: Setup Java
-      uses: actions/setup-java@v6.2.0
+      uses: actions/setup-java@v6.3.0
       with:
         distribution: 'temurin'
         #java-version: '17'
@@ -296,13 +297,13 @@ jobs:
     
     - name: Build APK
       run: |
-        sed -i "s/gradle-9.3.1-bin.zip/gradle-9.4.1-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
+        sed -i "s/gradle-9.6.0-bin.zip/gradle-9.8.0-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         #sed -i "s/gradle-8.12-bin.zip/gradle-8.13-bin.zip/" ${{ github.workspace }}/V2rayNG/gradle/wrapper/gradle-wrapper.properties
         cd ${{ github.workspace }}
         #curl https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch | patch --verbose -p 1
         #sed -i '10i\
         #\
-        #    ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+        #    ndkVersion = "30.0.16248370"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #    ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #sed -i -E 's/(versionCode = )684/\1687/; s/(versionName = "1.10.)32"/\135"/' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
         #curl -L  https://raw.githubusercontent.com/rosebe/v2rayNG/refs/heads/Generate_apk_signing_certificate_with_keytool/build.gradle.kts.patch -o build.gradle.kts.patch
@@ -338,7 +339,7 @@ jobs:
         done
     
     - name: Upload gradle_problems_report
-      uses: actions/upload-artifact@v7.0.2
+      uses: actions/upload-artifact@v7.0.1
       if: ${{  success() }}
       with:
         name: gradle_problems_report
@@ -361,7 +362,7 @@ jobs:
         #buildToolsVersion: 36.1.0   
     
     - name: Upload APK
-      uses: actions/upload-artifact@v7.0.2
+      uses: actions/upload-artifact@v7.0.1
       if: ${{  success() }}
       with:
         name: apk
